@@ -1,8 +1,9 @@
 "use client";
 
-import { CheckCircle2, Hammer, Inbox, Loader, Plus, Trash2 } from "lucide-react";
+import { CalendarClock, CheckCircle2, Hammer, Inbox, Loader, Plus, Trash2 } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
+import { ScheduleEditor, ScheduleSubtitle } from "@/components/schedule-editor";
 import { Button } from "@/components/ui/button";
 import { FieldLabel, TextInput } from "@/components/ui/input";
 import { Panel } from "@/components/ui/panel";
@@ -16,7 +17,12 @@ import {
   moveProject,
   setProjectProgress,
 } from "@/lib/game";
-import type { Project } from "@/lib/types";
+import {
+  clearScheduleForOwner,
+  saveScheduleForOwner,
+  useScheduleMap,
+} from "@/lib/schedule";
+import type { Project, Schedule } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Tab = "inbox" | "in_progress" | "done";
@@ -35,6 +41,18 @@ export default function ProjectsPage() {
   const [tab, setTab] = useState<Tab>("inbox");
   const [newName, setNewName] = useState("");
   const [flash, setFlash] = useState<{ id: string; text: string; ok: boolean } | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const scheduleMap = useScheduleMap();
+
+  async function handleSaveSchedule(projectId: string, patch: Partial<Schedule>) {
+    await saveScheduleForOwner(projectId, "goal", patch);
+    setEditingId(null);
+  }
+
+  async function handleClearSchedule(projectId: string) {
+    await clearScheduleForOwner(projectId);
+    setEditingId(null);
+  }
 
   const list = (projects ?? []).filter((p) => p.status === tab);
   const counts: Record<Tab, number | undefined> = {
@@ -95,7 +113,9 @@ export default function ProjectsPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2">
-        {list.map((project) => (
+        {list.map((project) => {
+          const schedule = scheduleMap?.[project.id];
+          return (
           <Panel key={project.id} className={cn(project.status === "done" && "opacity-75")}>
             <div className="flex items-start justify-between gap-2">
               <div className="flex min-w-0 items-start gap-3">
@@ -117,23 +137,52 @@ export default function ProjectsPage() {
                     <Inbox className="h-4.5 w-4.5" />
                   )}
                 </span>
-                <h3
+                <div className="min-w-0">
+                  <h3
+                    className={cn(
+                      "min-w-0 break-words font-display font-bold text-ink-900",
+                      project.status === "done" && "line-through decoration-moss-500/60"
+                    )}
+                  >
+                    {project.name}
+                  </h3>
+                  <ScheduleSubtitle schedule={schedule} />
+                </div>
+              </div>
+              <div className="flex shrink-0 items-start gap-1">
+                <button
+                  aria-label={`Edit schedule for ${project.name}`}
+                  onClick={() => setEditingId(editingId === project.id ? null : project.id)}
                   className={cn(
-                    "min-w-0 break-words font-display font-bold text-ink-900",
-                    project.status === "done" && "line-through decoration-moss-500/60"
+                    "cursor-pointer rounded-lg p-1.5 transition-colors",
+                    editingId === project.id || schedule
+                      ? "bg-moss-100 text-moss-600"
+                      : "text-ink-400 opacity-60 hover:bg-parchment-200 hover:opacity-100"
                   )}
                 >
-                  {project.name}
-                </h3>
+                  <CalendarClock className="h-4 w-4" />
+                </button>
+                <button
+                  aria-label={`Delete ${project.name}`}
+                  onClick={() => void deleteProject(project.id)}
+                  className="cursor-pointer rounded-lg p-1.5 text-ink-400 opacity-60 transition-opacity hover:bg-terra-100 hover:text-terra-600 hover:opacity-100"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
-              <button
-                aria-label={`Delete ${project.name}`}
-                onClick={() => void deleteProject(project.id)}
-                className="cursor-pointer rounded-lg p-1.5 text-ink-400 opacity-60 transition-opacity hover:bg-terra-100 hover:text-terra-600 hover:opacity-100"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
             </div>
+
+            {editingId === project.id && (
+              <div className="mt-4">
+                <ScheduleEditor
+                  ownerId={project.id}
+                  ownerType="goal"
+                  current={schedule}
+                  onSave={(patch) => void handleSaveSchedule(project.id, patch)}
+                  onRemove={() => void handleClearSchedule(project.id)}
+                />
+              </div>
+            )}
 
             {project.status !== "inbox" && (
               <div className="mt-4">
@@ -196,7 +245,8 @@ export default function ProjectsPage() {
               )}
             </div>
           </Panel>
-        ))}
+          );
+        })}
       </div>
 
       {list.length === 0 && (

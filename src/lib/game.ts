@@ -9,7 +9,8 @@ import type {
   Skill,
   Target,
 } from "./types";
-import { todayISO, toISODate } from "./utils";
+import { getScheduleFor, streakShouldContinue } from "./schedule";
+import { todayISO } from "./utils";
 
 /* ── Configurable reward / cost table ─────────────────────── */
 export const REWARDS = {
@@ -223,14 +224,28 @@ export async function createPlayerFromOnboarding(draft: OnboardingDraft): Promis
     createdAt: now,
   };
 
-  const chosen = SKILL_CATALOG.filter((s) => draft.selectedSkills.includes(s.name));
-  const skills: Skill[] = (chosen.length > 0 ? chosen : SKILL_CATALOG.slice(0, 3)).map((s) => {
-    const level = Math.max(1, Math.min(5, draft.skillLevels[s.name] ?? 1));
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const raw of draft.selectedSkills) {
+    const name = raw.trim().slice(0, 40);
+    const key = name.toLowerCase();
+    if (!name || seen.has(key)) continue;
+    seen.add(key);
+    names.push(name);
+  }
+  // Fall back to a starter trio if the player somehow added none.
+  if (names.length === 0) names.push("Creativity", "Health", "Learning");
+
+  const skills: Skill[] = names.map((name) => {
+    const def = SKILL_CATALOG.find(
+      (s) => s.name.toLowerCase() === name.toLowerCase()
+    );
+    const level = Math.max(1, Math.min(5, draft.skillLevels[name] ?? 1));
     return {
       id: crypto.randomUUID(),
       playerId: PLAYER_ID,
-      name: s.name,
-      category: s.category,
+      name,
+      category: def?.category ?? "Custom",
       level,
       xp: 0,
       xpToNext: xpToNextFor(level),
@@ -298,17 +313,24 @@ export async function removeFromWeakList(index: number): Promise<void> {
   });
 }
 
-/* ── Add a skill post-onboarding (starts at Lv. 1) ────────── */
+/* ── Add a skill post-onboarding (any name, starts at Lv. 1) ── */
 export async function addPlayerSkill(name: string): Promise<boolean> {
-  const def = SKILL_CATALOG.find((s) => s.name === name);
-  if (!def) return false;
+  const trimmed = name.trim().slice(0, 40);
+  if (!trimmed) return false;
   const existing = await db.skills.where("playerId").equals(PLAYER_ID).toArray();
-  if (existing.some((s) => s.name === name)) return false;
+  if (
+    existing.some((s) => s.name.toLowerCase() === trimmed.toLowerCase())
+  ) {
+    return false;
+  }
+  const def = SKILL_CATALOG.find(
+    (s) => s.name.toLowerCase() === trimmed.toLowerCase()
+  );
   await db.skills.add({
     id: crypto.randomUUID(),
     playerId: PLAYER_ID,
-    name: def.name,
-    category: def.category,
+    name: trimmed,
+    category: def?.category ?? "Custom",
     level: 1,
     xp: 0,
     xpToNext: xpToNextFor(1),
@@ -338,10 +360,11 @@ export async function checkInHabit(habitId: string): Promise<CheckInResult> {
     };
   }
 
-  // Streak: consecutive days continue, otherwise restart at 1.
-  const yesterday = toISODate(new Date(Date.now() - 86_400_000));
-  const streak =
-    habit.lastCheckInDate === yesterday ? habit.streakCount + 1 : 1;
+  // Streak: consecutive due-days continue, otherwise restart at 1.
+  // Habits with a Schedule skip non-due days without breaking the chain.
+  const schedule = await getScheduleFor(habit.id);
+  const continues = streakShouldContinue(habit.lastCheckInDate, schedule);
+  const streak = continues ? habit.streakCount + 1 : 1;
 
   const bonusXp = Math.min(streak - 1, 7) * REWARDS.habitStreakBonusXpPerDay;
   const xp = REWARDS.habit.xp + bonusXp;

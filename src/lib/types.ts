@@ -1,6 +1,39 @@
 export type ProjectStatus = "inbox" | "in_progress" | "done";
 export type LogSourceType = "habit" | "skill" | "project" | "system" | "shop";
 
+/** When a habit or goal is meant to happen. */
+export type TimeOfDay = "morning" | "midday" | "evening" | "night" | "custom";
+
+/** How often a habit or goal recurs. */
+export type RecurrenceType =
+  | "daily"
+  | "weekdays"
+  | "weekends"
+  | "weekly"
+  | "biweekly"
+  | "custom";
+
+/**
+ * Shared recurrence for habits and goals. A missing Schedule row means
+ * "runs every day, no fixed time" — the implicit default.
+ */
+export interface Schedule {
+  id: string;
+  ownerId: string; // habit id or project id
+  ownerType: "habit" | "goal";
+  timeOfDay: TimeOfDay;
+  /** HH:mm, only when timeOfDay is "custom". */
+  customTime?: string;
+  recurrenceType: RecurrenceType;
+  /** Weekday ints 0 (Sun) – 6 (Sat), only when recurrenceType is "custom". */
+  customDays?: number[];
+  /** Week interval for weekly/biweekly cadence (1 = every week, 2 = biweekly). */
+  intervalWeeks?: number;
+  /** ISO date anchor used to compute which week a weekly/biweekly item lands on. */
+  startDate: string;
+  active: boolean;
+}
+
 /** An append-only goal. Once written, it can never be edited or removed. */
 export interface Target {
   id: string;
