@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Life RPG palette ─────────────────────────────────── */
+  --color-parchment-50: #faf6ea;
+  --color-parchment-100: #f4eeda;
+  --color-parchment-200: #ece3c9;
+  --color-parchment-300: #ddd0ac;
+  --color-parchment-400: #c9bc9a;
+  --color-parchment-500: #b0a37f;
+
+  --color-ink-900: #35301f;
+  --color-ink-700: #4a4330;
+  --color-ink-500: #6d6450;
+  --color-ink-400: #877d66;
+
+  --color-moss-300: #aebd85;
+  --color-moss-400: #8ba05e;
+  --color-moss-500: #6e7f4f;
+  --color-moss-600: #57663c;
+  --color-moss-700: #43502e;
+  --color-moss-100: #e7ead2;
+  --color-moss-50: #f1f3e3;
+
+  --color-terra-100: #f6e0d4;
+  --color-terra-300: #e09173;
+  --color-terra-400: #d07a55;
+  --color-terra-500: #c05f3c;
+  --color-terra-600: #9e4a2c;
+  --color-terra-700: #7c3920;
+
+  --color-plum-100: #ecdfed;
+  --color-plum-300: #c19cc3;
+  --color-plum-400: #966f99;
+  --color-plum-500: #6c4a70;
+  --color-plum-600: #56395a;
+  --color-plum-700: #422c45;
+
+  --color-gold-100: #f5e8c6;
+  --color-gold-200: #ecd9a4;
+  --color-gold-300: #dfc27a;
+  --color-gold-400: #d2a94f;
+  --color-gold-500: #c9973b;
+  --color-gold-600: #a87a29;
+  --color-gold-700: #855e1e;
+
+  /* ── Type ─────────────────────────────────────────────── */
+  --font-display: var(--font-quicksand), "Quicksand", sans-serif;
+  --font-sans: var(--font-be-vietnam), "Be Vietnam Pro", sans-serif;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", monospace;
+
+  /* ── Shadows ──────────────────────────────────────────── */
+  --shadow-panel: 0 1px 2px rgb(74 67 48 / 0.08), 0 4px 14px rgb(74 67 48 / 0.1);
+  --shadow-lift: 0 2px 4px rgb(74 67 48 / 0.1), 0 10px 24px rgb(74 67 48 / 0.16);
+  --shadow-inset-line: inset 0 0 0 1px rgb(201 188 154 / 0.55);
+
+  --radius-card: 1rem;
+}
+
+body {
+  background-color: var(--color-parchment-200);
+  background-image:
+    radial-gradient(rgb(176 163 127 / 0.12) 1px, transparent 1px),
+    radial-gradient(rgb(176 163 127 / 0.09) 1px, transparent 1px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
+  color: var(--color-ink-700);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--color-gold-200);
+  color: var(--color-ink-900);
+}
+
+/* Parchment panel — the core surface of the design system */
+.panel {
+  background-color: var(--color-parchment-50);
+  background-image: linear-gradient(
+    160deg,
+    rgb(255 255 255 / 0.65),
+    rgb(255 255 255 / 0) 38%
+  );
+  border: 1px solid var(--color-parchment-400);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-panel), var(--shadow-inset-line);
+}
+
+/* Hand-drawn style dashed divider */
+.rule-dashed {
+  border-top: 2px dashed var(--color-parchment-400);
+}
+
+/* Focus-visible ring in theme colors */
+*:focus-visible {
+  outline: 2px solid var(--color-moss-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Thin scrollbars that match the parchment world */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-parchment-400) transparent;
+}
