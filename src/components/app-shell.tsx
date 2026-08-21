@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BookOpen,
   CalendarCheck,
   Coins,
   Compass,
@@ -24,6 +25,7 @@ export const PRIMARY_NAV = [
   { href: "/habits", label: "Habits", short: "Habits", icon: CalendarCheck },
   { href: "/skills", label: "Skills", short: "Skills", icon: Sparkles },
   { href: "/projects", label: "Projects", short: "Quests", icon: Hammer },
+  { href: "/reflect", label: "Reflect", short: "Reflect", icon: BookOpen },
   { href: "/marketplace", label: "Market", short: "Market", icon: Store },
 ] as const;
 
