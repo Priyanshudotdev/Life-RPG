@@ -66,6 +66,22 @@ body {
   background-position: 0 0, 11px 11px;
   color: var(--color-ink-700);
   font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Comfortable tap targets on touch devices */
+@media (pointer: coarse) {
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="slider"],
+  [role="tab"] {
+    touch-action: manipulation;
+  }
 }
 
 ::selection {

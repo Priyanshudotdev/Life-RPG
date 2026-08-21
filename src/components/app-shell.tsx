@@ -19,12 +19,12 @@ import { useGame } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const PRIMARY_NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/coach", label: "Coach", icon: Wand2 },
-  { href: "/habits", label: "Habits", icon: CalendarCheck },
-  { href: "/skills", label: "Skills", icon: Sparkles },
-  { href: "/projects", label: "Projects", icon: Hammer },
-  { href: "/marketplace", label: "Market", icon: Store },
+  { href: "/dashboard", label: "Dashboard", short: "Home", icon: LayoutDashboard },
+  { href: "/coach", label: "Coach", short: "Coach", icon: Wand2 },
+  { href: "/habits", label: "Habits", short: "Habits", icon: CalendarCheck },
+  { href: "/skills", label: "Skills", short: "Skills", icon: Sparkles },
+  { href: "/projects", label: "Projects", short: "Quests", icon: Hammer },
+  { href: "/marketplace", label: "Market", short: "Market", icon: Store },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -124,27 +124,26 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Mobile bottom nav */}
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-parchment-400 bg-parchment-100/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        {PRIMARY_NAV.map(({ href, label, icon: Icon }) => {
+        {PRIMARY_NAV.map(({ href, short, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 py-2.5 font-display text-[10px] font-bold uppercase tracking-wide transition-colors",
-                active ? "text-moss-600" : "text-ink-400"
-              )}
+              className="flex min-w-0 flex-1 flex-col items-center gap-0.5 px-0.5 py-2.5 font-display text-[10px] font-bold uppercase tracking-wide transition-colors"
             >
               <span
                 className={cn(
-                  "grid h-8 w-12 place-items-center rounded-lg transition-colors",
-                  active && "bg-moss-100"
+                  "grid h-8 w-full max-w-12 place-items-center rounded-lg transition-colors",
+                  active ? "bg-moss-100" : ""
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={cn("h-5 w-5", active ? "text-moss-600" : "text-ink-400")} />
               </span>
-              {label}
+              <span className={cn("max-w-full truncate", active ? "text-moss-600" : "text-ink-400")}>
+                {short}
+              </span>
             </Link>
           );
         })}
