@@ -1,6 +1,15 @@
 import { db, PLAYER_ID } from "./db";
-import { checkInHabit } from "./game";
-import type { ActivityLogEntry, AiReview, Habit, Player, Skill } from "./types";
+import { addHabit, addProject, checkInHabit, HABIT_ICONS } from "./game";
+import type {
+  ActivityLogEntry,
+  AiPlan,
+  AiReview,
+  Habit,
+  PlanItem,
+  Player,
+  Project,
+  Skill,
+} from "./types";
 import { todayISO } from "./utils";
 
 /* ── Gemini API key (stored locally only — this app has no server) ── */
@@ -238,4 +247,265 @@ export async function reviewDay(journal: string): Promise<ReviewResult> {
   });
 
   return { review, checkedIn, skipped };
+}
+
+/* ── AI plan generation & refinement ──────────────────────── */
+
+interface PlanVerdict {
+  strategy: string;
+  habits: Array<{ name: string; icon: string; why: string }>;
+  projects: Array<{ name: string; why: string }>;
+}
+
+const PLAN_SCHEMA = {
+  type: "object",
+  properties: {
+    strategy: {
+      type: "string",
+      description:
+        "Two or three sentences explaining the overall approach of the plan.",
+    },
+    habits: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: {
+            type: "string",
+            description: "Short habit name, e.g. 'Morning run'. Max 40 chars.",
+          },
+          icon: {
+            type: "string",
+            enum: [...HABIT_ICONS],
+            description: "Icon key for the habit.",
+          },
+          why: {
+            type: "string",
+            description: "One sentence on how this habit serves the targets.",
+          },
+        },
+        required: ["name", "icon", "why"],
+      },
+    },
+    projects: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: {
+            type: "string",
+            description:
+              "A concrete, finishable quest that moves a target forward. Max 60 chars.",
+          },
+          why: {
+            type: "string",
+            description: "One sentence on how this project serves the targets.",
+          },
+        },
+        required: ["name", "why"],
+      },
+    },
+  },
+  required: ["strategy", "habits", "projects"],
+} as const;
+
+function buildPlanPrompt(
+  player: Player,
+  skills: Skill[],
+  habits: Habit[],
+  projects: Project[]
+): string {
+  const targetLines =
+    player.targets.map((t, i) => `${i + 1}. ${t.text}`).join("\n") ||
+    "- (none set)";
+  const skillLines =
+    skills.map((s) => `- ${s.name}: Lv. ${s.level}`).join("\n") || "- (none)";
+  const strengthLines =
+    player.strengths.map((s) => `- ${s}`).join("\n") || "- (none listed)";
+  const weakLines =
+    player.weaknesses.map((w) => `- ${w}`).join("\n") || "- (none listed)";
+  const habitLines =
+    habits.map((h) => `- ${h.name}`).join("\n") || "- (none yet)";
+  const projectLines =
+    projects
+      .map((p) => `- ${p.name} (${p.status}${p.status !== "done" ? `, ${p.progressPct}%` : ""})`)
+      .join("\n") || "- (none yet)";
+
+  return `You are the Coach in "Life RPG", a cozy life-gamification app. Design an action plan for this player.
+
+Player: ${player.name}, overall Lv. ${player.level}.
+Their targets (long-term goals — the plan MUST serve these):
+${targetLines}
+Skills they train:
+${skillLines}
+Self-described strengths:
+${strengthLines}
+Self-described weaknesses (design around these):
+${weakLines}
+Habits they already track (do NOT duplicate these):
+${habitLines}
+Projects already on their board (do NOT duplicate):
+${projectLines}
+
+Rules:
+- Propose 2-4 NEW daily/weekly habits and 1-3 concrete finishable projects.
+- Every item must clearly serve at least one target.
+- Keep it realistic for someone with the weaknesses above — start small.
+`;
+}
+
+async function requestPlan(prompt: string, apiKey: string): Promise<PlanVerdict> {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: PLAN_SCHEMA,
+        },
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const body = await res.json();
+      detail = body?.error?.message ?? detail;
+    } catch {}
+    throw new Error(`Gemini request failed: ${detail}`);
+  }
+
+  const data = await res.json();
+  const text: string | undefined =
+    data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error("Gemini returned an empty response.");
+  return JSON.parse(text) as PlanVerdict;
+}
+
+function verdictToPlan(verdict: PlanVerdict): AiPlan {
+  const items: PlanItem[] = [
+    ...(verdict.habits ?? []).map((h) => ({
+      id: crypto.randomUUID(),
+      kind: "habit" as const,
+      name: h.name.trim().slice(0, 40),
+      icon: (HABIT_ICONS as readonly string[]).includes(h.icon) ? h.icon : "sun",
+      detail: h.why,
+    })),
+    ...(verdict.projects ?? []).map((p) => ({
+      id: crypto.randomUUID(),
+      kind: "project" as const,
+      name: p.name.trim().slice(0, 60),
+      detail: p.why,
+    })),
+  ];
+  return {
+    id: crypto.randomUUID(),
+    playerId: PLAYER_ID,
+    strategy: verdict.strategy,
+    items,
+    appliedAt: null,
+    createdAt: Date.now(),
+  };
+}
+
+async function savePlan(plan: AiPlan): Promise<void> {
+  await db.transaction("rw", db.aiPlans, async () => {
+    // Only the latest plan is kept.
+    await db.aiPlans.where("playerId").equals(PLAYER_ID).delete();
+    await db.aiPlans.add(plan);
+  });
+}
+
+/** Generates a fresh plan from the player's profile. Replaces any current plan. */
+export async function generatePlan(): Promise<AiPlan> {
+  const apiKey = getGeminiKey();
+  if (!apiKey) throw new Error("Add your Gemini API key in Settings first.");
+
+  const [player, skills, habits, projects] = await Promise.all([
+    db.players.get(PLAYER_ID),
+    db.skills.where("playerId").equals(PLAYER_ID).toArray(),
+    db.habits.where("playerId").equals(PLAYER_ID).toArray(),
+    db.projects.where("playerId").equals(PLAYER_ID).toArray(),
+  ]);
+  if (!player) throw new Error("No character found.");
+
+  const verdict = await requestPlan(buildPlanPrompt(player, skills, habits, projects), apiKey);
+  const plan = verdictToPlan(verdict);
+  await savePlan(plan);
+  return plan;
+}
+
+/** Revises the current plan according to the player's feedback. */
+export async function refinePlan(feedback: string): Promise<AiPlan> {
+  const apiKey = getGeminiKey();
+  if (!apiKey) throw new Error("Add your Gemini API key in Settings first.");
+  if (!feedback.trim()) throw new Error("Tell the Coach what to change.");
+
+  const [player, skills, habits, projects] = await Promise.all([
+    db.players.get(PLAYER_ID),
+    db.skills.where("playerId").equals(PLAYER_ID).toArray(),
+    db.habits.where("playerId").equals(PLAYER_ID).toArray(),
+    db.projects.where("playerId").equals(PLAYER_ID).toArray(),
+  ]);
+  if (!player) throw new Error("No character found.");
+  const current = await getLatestPlan();
+
+  const verdict = await requestPlan(
+    buildPlanPrompt(player, skills, habits, projects) +
+      `\nHere is the current plan as JSON:\n${JSON.stringify(
+        { strategy: current?.strategy, habits: current?.items.filter((i) => i.kind === "habit").map(({ name, icon, detail }) => ({ name, icon, why: detail })), projects: current?.items.filter((i) => i.kind === "project").map(({ name, detail }) => ({ name, why: detail })) },
+        null,
+        2
+      )}\n\nThe player's requested changes: """${feedback.trim()}"""\n\nReturn the FULL revised plan (not just the diff), following the same rules.`,
+    apiKey
+  );
+  const plan = verdictToPlan(verdict);
+  await savePlan(plan);
+  return plan;
+}
+
+export async function getLatestPlan(): Promise<AiPlan | undefined> {
+  const plans = await db.aiPlans
+    .where("playerId")
+    .equals(PLAYER_ID)
+    .sortBy("createdAt");
+  return plans.at(-1);
+}
+
+/** Creates the selected plan items as real habits/projects. */
+export async function applyPlan(
+  itemIds: string[]
+): Promise<{ habits: number; projects: number }> {
+  const plan = await getLatestPlan();
+  if (!plan) throw new Error("No plan to apply.");
+  const chosen = plan.items.filter((i) => itemIds.includes(i.id));
+  let habits = 0;
+  let projects = 0;
+  for (const item of chosen) {
+    if (item.kind === "habit") {
+      await addHabit(item.name, item.icon ?? "sun");
+      habits += 1;
+    } else {
+      await addProject(item.name);
+      projects += 1;
+    }
+  }
+  await db.aiPlans.update(plan.id, { appliedAt: Date.now() });
+  await db.activityLog.add({
+    id: crypto.randomUUID(),
+    playerId: PLAYER_ID,
+    timestamp: Date.now(),
+    message: `Applied the Coach's plan — ${habits} habit(s) and ${projects} project(s) added.`,
+    xpGained: 0,
+    coinsGained: 0,
+    sourceType: "system",
+  });
+  return { habits, projects };
 }
