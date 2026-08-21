@@ -85,6 +85,21 @@ export interface Purchase {
   purchasedAt: number;
 }
 
+/** One AI Coach daily debrief. */
+export interface AiReview {
+  id: string;
+  playerId: string;
+  date: string; // ISO date (yyyy-mm-dd)
+  score: number; // 0-100
+  summary: string;
+  wins: string[];
+  improvements: string[];
+  /** Names of habits the coach credited as done today. */
+  habitsMatched: string[];
+  journalText: string;
+  createdAt: number;
+}
+
 export interface OnboardingDraft {
   firstTarget: string;
   secondTarget: string;
