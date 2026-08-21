@@ -153,8 +153,8 @@ export default function OnboardingPage() {
         {step === 7 && <ConfirmStep draft={draft} />}
       </div>
 
-      {/* Wizard controls */}
-      <div className="mt-10 flex items-center justify-between">
+      {/* Wizard controls — stay reachable on small screens */}
+      <div className="sticky bottom-0 z-10 mt-6 flex items-center justify-between gap-3 bg-parchment-50/90 py-3 backdrop-blur md:static md:mt-10 md:bg-transparent md:py-0 md:backdrop-blur-none">
         {step > 1 ? (
           <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
             <ArrowLeft className="h-4 w-4" /> Back

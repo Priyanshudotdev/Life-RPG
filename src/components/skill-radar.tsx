@@ -20,7 +20,7 @@ export function SkillRadar({ skills }: { skills: Skill[] }) {
   if (data.length === 0) return null;
 
   return (
-    <div className="h-64 w-full" aria-label="Radar chart of skill levels">
+    <div className="h-64 w-full max-w-full overflow-hidden" aria-label="Radar chart of skill levels">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} outerRadius="72%">
           <PolarGrid stroke="#c9bc9a" strokeDasharray="4 4" />
