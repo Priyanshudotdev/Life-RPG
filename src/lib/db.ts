@@ -4,6 +4,8 @@ import type {
   AiPlan,
   AiReview,
   Habit,
+  Journey,
+  JourneyMilestone,
   Player,
   Project,
   Purchase,
@@ -23,6 +25,8 @@ export class CozyTacticsDB extends Dexie {
   aiReviews!: Table<AiReview, string>;
   aiPlans!: Table<AiPlan, string>;
   schedules!: Table<Schedule, string>;
+  journeys!: Table<Journey, string>;
+  journeyMilestones!: Table<JourneyMilestone, string>;
 
   constructor() {
     // Internal DB id kept from the original prototype so existing
@@ -45,6 +49,10 @@ export class CozyTacticsDB extends Dexie {
     });
     this.version(4).stores({
       schedules: "id, ownerId, ownerType, active",
+    });
+    this.version(5).stores({
+      journeys: "id, playerId, status",
+      journeyMilestones: "id, journeyId, status",
     });
   }
 }

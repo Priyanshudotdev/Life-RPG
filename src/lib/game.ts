@@ -466,6 +466,45 @@ async function pickSkillForHabit(icon: string): Promise<Skill | undefined> {
   );
 }
 
+/* ── Shared reward helper (journeys grant milestone loot) ─── */
+export async function grantSkillXpAndCoins(
+  skillId: string | null | undefined,
+  xp: number,
+  coins: number
+): Promise<{ leveledUpSkills: string[] }> {
+  const player = await db.players.get(PLAYER_ID);
+  if (!player) return { leveledUpSkills: [] };
+  const leveledUpSkills: string[] = [];
+  await db.transaction("rw", db.players, db.skills, db.activityLog, async () => {
+    if (coins !== 0) {
+      await db.players.update(player.id, { coins: player.coins + coins });
+    }
+    if (skillId && xp !== 0) {
+      const skill = await db.skills.get(skillId);
+      if (skill) {
+        const { skill: updated, levelsGained } = applyXpGain(skill, xp);
+        await db.skills.put(updated);
+        if (levelsGained > 0) {
+          leveledUpSkills.push(`${updated.name} → Lv. ${updated.level}`);
+          await db.players.update(player.id, {
+            coins:
+              (await db.players.get(player.id))!.coins +
+              levelsGained * REWARDS.skillLevelUpCoins,
+          });
+          await log(
+            player.id,
+            `Leveled up! ${updated.name} is now Lv. ${updated.level}.`,
+            0,
+            levelsGained * REWARDS.skillLevelUpCoins,
+            "skill"
+          );
+        }
+      }
+    }
+  });
+  return { leveledUpSkills };
+}
+
 /* ── Projects ─────────────────────────────────────────────── */
 export type ProjectResult = { ok: true } | { ok: false; reason: string };
 

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Panel, PanelTitle } from "@/components/ui/panel";
 import { ProgressBar } from "@/components/ui/segmented-bar";
 import { Tabs } from "@/components/ui/tabs";
+import { RoadmapTab } from "@/components/roadmap-tab";
 import { db, PLAYER_ID } from "@/lib/db";
 import {
   applyPlan,
@@ -29,7 +30,7 @@ import {
 } from "@/lib/ai";
 import type { AiReview } from "@/lib/types";
 
-type TabValue = "debrief" | "plan";
+type TabValue = "debrief" | "plan" | "roadmap";
 
 export default function CoachPage() {
   const [tab, setTab] = useState<TabValue>("debrief");
@@ -49,12 +50,25 @@ export default function CoachPage() {
       <div>
         <h1 className="font-display text-2xl font-bold text-ink-900">AI Coach</h1>
         <p className="mt-1 text-sm text-ink-500">
-          Your personal coach: daily debriefs that score your day, and an
-          AI-built plan you can reshape with a sentence.
+          Your personal coach: daily debriefs that score your day, an AI-built
+          plan you can reshape with a sentence, and roadmaps for anything you
+          want to learn.
         </p>
       </div>
 
-      {!hasKey ? (
+      <Tabs<TabValue>
+        items={[
+          { value: "debrief", label: "Daily debrief" },
+          { value: "plan", label: "My plan" },
+          { value: "roadmap", label: "Roadmap" },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
+
+      {tab === "roadmap" ? (
+        <RoadmapTab />
+      ) : !hasKey ? (
         <Panel>
           <div className="flex items-start gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-gold-500 bg-gold-100">
@@ -82,18 +96,10 @@ export default function CoachPage() {
             </div>
           </div>
         </Panel>
+      ) : tab === "debrief" ? (
+        <DebriefTab reviews={reviews ?? []} />
       ) : (
-        <>
-          <Tabs<TabValue>
-            items={[
-              { value: "debrief", label: "Daily debrief" },
-              { value: "plan", label: "My plan" },
-            ]}
-            value={tab}
-            onChange={setTab}
-          />
-          {tab === "debrief" ? <DebriefTab reviews={reviews ?? []} /> : <PlanTab />}
-        </>
+        <PlanTab />
       )}
     </div>
   );
