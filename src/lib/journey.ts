@@ -1,4 +1,4 @@
-import { GEMINI_MODEL, getGeminiKey } from "./ai";
+import { getGeminiKey, requestStructured } from "./ai";
 import { db, PLAYER_ID } from "./db";
 import { addHabit, addProject, grantSkillXpAndCoins } from "./game";
 import type { Journey, JourneyMilestone } from "./types";
@@ -49,8 +49,9 @@ Rules:
 }
 
 /**
- * Asks Gemini for an ordered roadmap. Throws when no key is configured or the
- * call fails — callers must fall back to the manual builder in that case.
+ * Asks Gemini for an ordered roadmap (with model fallback). Throws when no
+ * key is configured or every model fails — callers must fall back to the
+ * manual builder in that case.
  */
 export async function generateRoadmap(
   goal: string,
@@ -59,36 +60,11 @@ export async function generateRoadmap(
   const apiKey = getGeminiKey();
   if (!apiKey) throw new Error("Add your Gemini API key in Settings first.");
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: buildRoadmapPrompt(goal, context) }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: ROADMAP_SCHEMA,
-        },
-      }),
-    }
+  const text = await requestStructured(
+    buildRoadmapPrompt(goal, context),
+    ROADMAP_SCHEMA,
+    apiKey
   );
-
-  if (!res.ok) {
-    let detail = `HTTP ${res.status}`;
-    try {
-      const body = await res.json();
-      detail = body?.error?.message ?? detail;
-    } catch {}
-    throw new Error(`Gemini request failed: ${detail}`);
-  }
-
-  const data = await res.json();
-  const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("Gemini returned an empty response.");
   const parsed = JSON.parse(text) as { milestones?: MilestoneDraft[] };
   const drafts = (parsed.milestones ?? [])
     .map((m) => ({

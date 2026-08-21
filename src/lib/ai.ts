@@ -33,6 +33,96 @@ export function clearGeminiKey(): void {
 
 export const GEMINI_MODEL = "gemini-3.6-flash";
 
+/**
+ * Ordered Gemini models tried for every structured request: when one is
+ * deprecated, rate-limited, or unavailable on the account, the next is
+ * attempted automatically so AI features never hard-fail on a model swap.
+ */
+const GEMINI_FALLBACK_MODELS = [
+  GEMINI_MODEL,
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-flash-latest",
+];
+
+function structuredBody(prompt: string, schema: object) {
+  return {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: schema,
+    },
+  };
+}
+
+async function extractError(res: Response): Promise<string> {
+  let detail = `HTTP ${res.status}`;
+  try {
+    const body = await res.json();
+    detail = body?.error?.message ?? detail;
+  } catch {}
+  return detail;
+}
+
+/**
+ * POSTs a JSON-schema request to Gemini, walking the fallback model list on
+ * failure. Key problems abort immediately (retrying other models can't help);
+ * everything else — model removed, 404, 429, 5xx — moves to the next model.
+ */
+export async function requestStructured(
+  prompt: string,
+  schema: object,
+  apiKey: string
+): Promise<string> {
+  const body = JSON.stringify(structuredBody(prompt, schema));
+  let lastError = new Error("No Gemini models available.");
+
+  for (const model of GEMINI_FALLBACK_MODELS) {
+    let res: Response;
+    try {
+      res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body,
+        }
+      );
+    } catch (e) {
+      // Network hiccup — worth trying the next endpoint, but keep the cause.
+      lastError = e instanceof Error ? e : new Error("Network error.");
+      continue;
+    }
+
+    if (!res.ok) {
+      const detail = await extractError(res);
+      if (/api key/i.test(detail)) {
+        throw new Error(`Gemini request failed: ${detail}`);
+      }
+      lastError = new Error(`Gemini request failed (${model}): ${detail}`);
+      continue;
+    }
+
+    const data = await res.json();
+    const text: string | undefined =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (text) return text;
+    lastError = new Error("Gemini returned an empty response.");
+  }
+
+  throw lastError;
+}
+
+async function callGemini(prompt: string, apiKey: string): Promise<CoachVerdict> {
+  const text = await requestStructured(prompt, VERDICT_SCHEMA, apiKey);
+  const verdict = JSON.parse(text) as CoachVerdict;
+  verdict.dailyScore = Math.max(0, Math.min(100, Math.round(verdict.dailyScore)));
+  return verdict;
+}
+
 /* ── Structured output contract ───────────────────────────── */
 interface CoachVerdict {
   dailyScore: number;
@@ -131,42 +221,6 @@ Today is ${todayISO()}. The player's journal:
 """
 ${journal.trim()}
 """`;
-}
-
-async function callGemini(prompt: string, apiKey: string): Promise<CoachVerdict> {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: VERDICT_SCHEMA,
-        },
-      }),
-    }
-  );
-
-  if (!res.ok) {
-    let detail = `HTTP ${res.status}`;
-    try {
-      const body = await res.json();
-      detail = body?.error?.message ?? detail;
-    } catch {}
-    throw new Error(`Gemini request failed: ${detail}`);
-  }
-
-  const data = await res.json();
-  const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("Gemini returned an empty response.");
-  const verdict = JSON.parse(text) as CoachVerdict;
-  verdict.dailyScore = Math.max(0, Math.min(100, Math.round(verdict.dailyScore)));
-  return verdict;
 }
 
 function matchHabit(name: string, habits: Habit[]): Habit | undefined {
@@ -355,37 +409,7 @@ Rules:
 }
 
 async function requestPlan(prompt: string, apiKey: string): Promise<PlanVerdict> {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: PLAN_SCHEMA,
-        },
-      }),
-    }
-  );
-
-  if (!res.ok) {
-    let detail = `HTTP ${res.status}`;
-    try {
-      const body = await res.json();
-      detail = body?.error?.message ?? detail;
-    } catch {}
-    throw new Error(`Gemini request failed: ${detail}`);
-  }
-
-  const data = await res.json();
-  const text: string | undefined =
-    data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("Gemini returned an empty response.");
+  const text = await requestStructured(prompt, PLAN_SCHEMA, apiKey);
   return JSON.parse(text) as PlanVerdict;
 }
 
