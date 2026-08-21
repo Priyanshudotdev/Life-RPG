@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check, Compass, Flag, Plus, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Compass, ExternalLink, Flag, Plus, Sparkles, Wand2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CharacterSheet } from "@/components/character-sheet";
@@ -14,7 +14,10 @@ import { useGame } from "@/lib/store";
 import type { OnboardingDraft } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
+
+/** Where the AI Coach/Plan features read the key from (same as Settings). */
+export const GEMINI_KEY_STORAGE = "life-rpg.gemini-api-key";
 
 const FIRST_TARGET_EXAMPLES = [
   "Travel the world",
@@ -54,6 +57,7 @@ const initialDraft: OnboardingDraft = {
   weaknesses: [],
   characterName: "",
   portraitId: PORTRAITS[0].id,
+  geminiApiKey: "",
 };
 
 export default function OnboardingPage() {
@@ -69,6 +73,16 @@ export default function OnboardingPage() {
   }, [loading, hasPlayer, router]);
 
   const patch = (p: Partial<OnboardingDraft>) => setDraft((d) => ({ ...d, ...p }));
+
+  // Single advance path so the API-key step persists before moving on —
+  // used by Continue and both skip links.
+  const advance = () => {
+    if (step === TOTAL_STEPS - 1) {
+      const key = (draft.geminiApiKey ?? "").trim();
+      if (key) window.localStorage.setItem(GEMINI_KEY_STORAGE, key);
+    }
+    setStep((s) => s + 1);
+  };
   const canAdvance = () => {
     switch (step) {
       case 2:
@@ -199,7 +213,13 @@ export default function OnboardingPage() {
         {step === 7 && (
           <CharacterStep draft={draft} onChange={patch} />
         )}
-        {step === 8 && <ConfirmStep draft={draft} />}
+        {step === 8 && (
+          <GeminiKeyStep
+            value={draft.geminiApiKey ?? ""}
+            onChange={(v) => patch({ geminiApiKey: v })}
+          />
+        )}
+        {step === 9 && <ConfirmStep draft={draft} />}
       </div>
 
       {/* Wizard controls — stay reachable on small screens */}
@@ -208,7 +228,7 @@ export default function OnboardingPage() {
           <div className="mb-2 flex justify-center md:hidden">
             <button
               type="button"
-              onClick={() => setStep((s) => s + 1)}
+              onClick={advance}
               className="cursor-pointer text-xs font-medium text-ink-400 underline decoration-dotted underline-offset-4 hover:text-moss-600"
             >
               Skip for now
@@ -225,13 +245,13 @@ export default function OnboardingPage() {
           )}
           {step < TOTAL_STEPS ? (
             <div className="flex flex-col items-end gap-1.5">
-              <Button size="lg" disabled={!canAdvance()} onClick={() => setStep((s) => s + 1)}>
+              <Button size="lg" disabled={!canAdvance()} onClick={advance}>
                 {step === 1 ? "Begin" : "Continue"} <ArrowRight className="h-4 w-4" />
               </Button>
               {step > 1 && (
                 <button
                   type="button"
-                  onClick={() => setStep((s) => s + 1)}
+                  onClick={advance}
                   className="hidden cursor-pointer text-xs font-medium text-ink-400 underline decoration-dotted underline-offset-4 transition-colors hover:text-moss-600 md:block"
                 >
                   Skip for now — you can add this later
@@ -667,7 +687,80 @@ function CharacterStep({
   );
 }
 
-/* ── Step 7 — Confirm ─────────────────────────────────────── */
+/* ── Step 8 — Optional Gemini API key ─────────────────────── */
+function GeminiKeyStep({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <div className="panel p-8">
+      <div className="flex items-center gap-3">
+        <span className="grid h-11 w-11 place-items-center rounded-xl border border-plum-300 bg-plum-100/60">
+          <Wand2 className="h-5 w-5 text-plum-500" />
+        </span>
+        <h2 className="font-display text-2xl font-bold text-ink-900">
+          Unlock your AI Coach?
+        </h2>
+      </div>
+      <p className="mt-2 text-sm text-ink-500">
+        With a free Gemini API key, Life RPG can write weekly debriefs and
+        adapt your plan as life happens. Totally optional — everything else
+        works without it.
+      </p>
+
+      <div className="mt-6">
+        <FieldLabel hint="optional">Gemini API key</FieldLabel>
+        <div className="relative">
+          <TextInput
+            autoFocus
+            type={show ? "text" : "password"}
+            value={value}
+            maxLength={200}
+            placeholder="Paste your key — starts with AIza…"
+            autoComplete="off"
+            spellCheck={false}
+            onChange={(e) => onChange(e.target.value)}
+            className="pr-16"
+          />
+          <button
+            type="button"
+            onClick={() => setShow((s) => !s)}
+            aria-pressed={show}
+            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer font-mono text-[11px] font-bold uppercase tracking-wide text-ink-400 hover:text-moss-600"
+          >
+            {show ? "Hide" : "Show"}
+          </button>
+        </div>
+      </div>
+
+      <a
+        href="https://aistudio.google.com/app/apikey"
+        target="_blank"
+        rel="noreferrer"
+        className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-moss-600 underline decoration-dotted underline-offset-4 hover:text-moss-700"
+      >
+        Get a free key at Google AI Studio
+        <ExternalLink className="h-3.5 w-3.5" />
+      </a>
+
+      <div className="mt-5 rounded-xl border border-parchment-300 bg-parchment-100/60 p-3">
+        <p className="text-xs leading-relaxed text-ink-400">
+          The key lives only in this browser&apos;s local storage — no accounts,
+          no servers on our side. It travels solely to Google&apos;s Gemini API
+          when you ask for coaching. You can change or remove it later in
+          Settings.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ── Step 9 — Confirm ─────────────────────────────────────── */
 function ConfirmStep({ draft }: { draft: OnboardingDraft }) {
   const previewPlayer = makePreviewPlayer(draft);
 

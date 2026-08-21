@@ -153,6 +153,33 @@ export interface AiPlan {
   createdAt: number;
 }
 
+/** A learning-roadmap container ("Learn DSA"), independent of Skills/Projects. */
+export interface Journey {
+  id: string;
+  playerId: string;
+  title: string;
+  description: string;
+  status: "active" | "completed" | "archived";
+  /** Optional skill granted XP when milestones complete. Nullable by design. */
+  skillId?: string | null;
+  createdAt: number;
+  completedAt: number | null;
+}
+
+/** One ordered step on a Journey's path. */
+export interface JourneyMilestone {
+  id: string;
+  journeyId: string;
+  order: number;
+  title: string;
+  description: string;
+  status: "locked" | "current" | "completed";
+  xpReward: number;
+  coinReward: number;
+  /** Set when the player pulled this step into their daily loops. */
+  integratedAs?: "habit" | "project" | null;
+}
+
 export interface OnboardingDraft {
   firstTarget: string;
   secondTarget: string;
@@ -164,4 +191,6 @@ export interface OnboardingDraft {
   weaknesses: string[];
   characterName: string;
   portraitId: string;
+  /** Optional — saved to localStorage, powers the AI Coach/Plan features. */
+  geminiApiKey?: string;
 }

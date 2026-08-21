@@ -9,7 +9,6 @@ import { FieldLabel, TextInput } from "@/components/ui/input";
 import { Panel, PanelTitle } from "@/components/ui/panel";
 import { clearGeminiKey, getGeminiKey, setGeminiKey } from "@/lib/ai";
 import {
-  SKILL_CATALOG,
   addPlayerSkill,
   addToStrengthList,
   addToWeakList,
@@ -98,8 +97,7 @@ function SettingsForm({ player, ownedSkills }: { player: Player; ownedSkills: st
   const [confirmReset, setConfirmReset] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [skillAdded, setSkillAdded] = useState(false);
-
-  const availableSkills = SKILL_CATALOG.filter((s) => !ownedSkills.includes(s.name));
+  const [skillExists, setSkillExists] = useState(false);
 
   async function handleSave() {
     await updatePlayerProfile({ name: name.trim() || player.name });
@@ -108,12 +106,15 @@ function SettingsForm({ player, ownedSkills }: { player: Player; ownedSkills: st
   }
 
   async function handleAddSkill() {
-    if (!newSkill) return;
+    if (!newSkill.trim()) return;
     const ok = await addPlayerSkill(newSkill);
     if (ok) {
       setNewSkill("");
       setSkillAdded(true);
       setTimeout(() => setSkillAdded(false), 2000);
+    } else {
+      setSkillExists(true);
+      setTimeout(() => setSkillExists(false), 2500);
     }
   }
 
@@ -193,39 +194,30 @@ function SettingsForm({ player, ownedSkills }: { player: Player; ownedSkills: st
 
       <Panel>
         <PanelTitle>Skills</PanelTitle>
-        {availableSkills.length > 0 ? (
-          <>
-            <p className="mt-3 text-sm text-ink-500">
-              Add another skill to train — it starts fresh at Lv. 1.
-            </p>
-            <div className="mt-3 flex gap-2">
-              <select
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                className="min-w-0 flex-1 rounded-xl border border-parchment-400 bg-parchment-50 px-3 py-2.5 text-sm text-ink-800 focus:border-moss-500 focus:outline-none"
-              >
-                <option value="" disabled>
-                  Choose a skill…
-                </option>
-                {availableSkills.map((s) => (
-                  <option key={s.name} value={s.name}>
-                    {s.name} — {s.blurb}
-                  </option>
-                ))}
-              </select>
-              <Button onClick={() => void handleAddSkill()} disabled={!newSkill}>
-                <Plus className="h-4 w-4" /> Add skill
-              </Button>
-            </div>
-            {skillAdded && (
-              <p role="status" className="mt-2 font-display text-sm font-semibold text-moss-600">
-                Skill added ✓
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="mt-3 text-sm text-ink-500">
-            You&apos;re training every skill in the compendium. Impressive.
+        <p className="mt-3 text-sm text-ink-500">
+          Add any skill you want to train — it starts fresh at Lv. 1. You&apos;re
+          currently training: {ownedSkills.join(", ") || "nothing yet"}.
+        </p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <TextInput
+            value={newSkill}
+            maxLength={40}
+            placeholder="Type a skill — e.g. Dancing, Chess…"
+            onChange={(e) => setNewSkill(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && void handleAddSkill()}
+          />
+          <Button onClick={() => void handleAddSkill()} disabled={!newSkill.trim()} className="shrink-0">
+            <Plus className="h-4 w-4" /> Add skill
+          </Button>
+        </div>
+        {skillAdded && (
+          <p role="status" className="mt-2 font-display text-sm font-semibold text-moss-600">
+            Skill added ✓
+          </p>
+        )}
+        {skillExists && (
+          <p className="mt-2 rounded-xl border border-gold-400 bg-gold-100 px-3 py-2 text-sm font-medium text-gold-700">
+            You&apos;re already training that one.
           </p>
         )}
       </Panel>
