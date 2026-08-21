@@ -100,6 +100,26 @@ export interface AiReview {
   createdAt: number;
 }
 
+/** A habit or project suggested by the AI plan. */
+export interface PlanItem {
+  id: string;
+  kind: "habit" | "project";
+  name: string;
+  /** HABIT_ICONS key (habits only). */
+  icon?: string;
+  detail: string;
+}
+
+/** An AI-generated action plan toward the player's targets. */
+export interface AiPlan {
+  id: string;
+  playerId: string;
+  strategy: string;
+  items: PlanItem[];
+  appliedAt: number | null;
+  createdAt: number;
+}
+
 export interface OnboardingDraft {
   firstTarget: string;
   secondTarget: string;

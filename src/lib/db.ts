@@ -1,6 +1,7 @@
 import Dexie, { type Table } from "dexie";
 import type {
   ActivityLogEntry,
+  AiPlan,
   AiReview,
   Habit,
   Player,
@@ -19,6 +20,7 @@ export class CozyTacticsDB extends Dexie {
   shopItems!: Table<ShopItem, string>;
   purchases!: Table<Purchase, string>;
   aiReviews!: Table<AiReview, string>;
+  aiPlans!: Table<AiPlan, string>;
 
   constructor() {
     // Internal DB id kept from the original prototype so existing
@@ -35,6 +37,9 @@ export class CozyTacticsDB extends Dexie {
     });
     this.version(2).stores({
       aiReviews: "id, playerId, date",
+    });
+    this.version(3).stores({
+      aiPlans: "id, playerId",
     });
   }
 }
