@@ -10,6 +10,7 @@ import {
   Settings,
   Sparkles,
   Store,
+  Wand2,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 
 export const PRIMARY_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/coach", label: "Coach", icon: Wand2 },
   { href: "/habits", label: "Habits", icon: CalendarCheck },
   { href: "/skills", label: "Skills", icon: Sparkles },
   { href: "/projects", label: "Projects", icon: Hammer },
