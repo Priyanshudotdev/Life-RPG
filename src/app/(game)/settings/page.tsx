@@ -1,12 +1,13 @@
 "use client";
 
-import { AlertTriangle, Lock, Plus, RotateCcw, Save } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, KeyRound, Lock, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChipInput } from "@/components/ui/chip-input";
 import { FieldLabel, TextInput } from "@/components/ui/input";
 import { Panel, PanelTitle } from "@/components/ui/panel";
+import { clearGeminiKey, getGeminiKey, setGeminiKey } from "@/lib/ai";
 import {
   SKILL_CATALOG,
   addPlayerSkill,
@@ -26,6 +27,66 @@ export default function SettingsPage() {
   // Keyed by player id so the form re-initializes if the character changes,
   // but live-query updates after a save don't clobber in-progress edits.
   return <SettingsForm key={player.id} player={player} ownedSkills={skills.map((s) => s.name)} />;
+}
+
+function ApiKeyForm() {
+  const [key, setKey] = useState(getGeminiKey());
+  const [visible, setVisible] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  function save() {
+    if (key.trim()) {
+      setGeminiKey(key);
+    } else {
+      clearGeminiKey();
+    }
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div className="mt-3">
+      <div className="flex gap-2">
+        <div className="relative min-w-0 flex-1">
+          <input
+            type={visible ? "text" : "password"}
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            placeholder="AIza…"
+            autoComplete="off"
+            className="w-full rounded-xl border border-parchment-400 bg-parchment-50 px-3 py-2.5 pr-10 font-mono text-sm text-ink-800 placeholder:text-ink-300 focus:border-moss-500 focus:outline-none"
+          />
+          <button
+            type="button"
+            aria-label={visible ? "Hide key" : "Show key"}
+            onClick={() => setVisible((v) => !v)}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-600 cursor-pointer"
+          >
+            {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        <Button onClick={save}>
+          <Save className="h-4 w-4" /> Save
+        </Button>
+        {getGeminiKey() && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              clearGeminiKey();
+              setKey("");
+            }}
+          >
+            <Trash2 className="h-4 w-4" /> Remove
+          </Button>
+        )}
+      </div>
+      {saved && (
+        <p role="status" className="mt-2 font-display text-sm font-semibold text-moss-600">
+          Saved ✓
+        </p>
+      )}
+    </div>
+  );
 }
 
 function SettingsForm({ player, ownedSkills }: { player: Player; ownedSkills: string[] }) {
@@ -166,6 +227,27 @@ function SettingsForm({ player, ownedSkills }: { player: Player; ownedSkills: st
             You&apos;re training every skill in the compendium. Impressive.
           </p>
         )}
+      </Panel>
+
+      <Panel>
+        <PanelTitle className="flex items-center gap-2">
+          <KeyRound className="h-4 w-4 text-gold-600" /> AI Coach
+        </PanelTitle>
+        <p className="mt-3 text-sm text-ink-500">
+          Paste your Gemini API key to enable the AI Coach. It&apos;s stored
+          only in this browser and sent directly to Google — never anywhere
+          else. Get a free key at{" "}
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-moss-600 hover:underline"
+          >
+            aistudio.google.com/apikey
+          </a>
+          .
+        </p>
+        <ApiKeyForm />
       </Panel>
 
       <Panel>
