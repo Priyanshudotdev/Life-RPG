@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, JetBrains_Mono, Quicksand } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { GameProvider } from "@/lib/store";
 import "./globals.css";
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full">
         <GameProvider>{children}</GameProvider>
+        <Analytics />
       </body>
     </html>
   );
