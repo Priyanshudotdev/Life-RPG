@@ -102,7 +102,7 @@ export default function HabitsPage() {
           </div>
           <div>
             <FieldLabel>Icon</FieldLabel>
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {HABIT_ICONS.map((key) => {
                 const Icon = ICON_MAP[key];
                 return (

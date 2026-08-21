@@ -58,7 +58,7 @@ export function ChipInput({
           ))}
         </ul>
       )}
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -71,7 +71,7 @@ export function ChipInput({
           type="button"
           onClick={commit}
           disabled={!draft.trim()}
-          className="shrink-0 rounded-xl border border-parchment-400 bg-parchment-100 px-4 py-2 font-display text-sm font-semibold text-ink-700 shadow-[0_2px_0_0_var(--color-parchment-400)] transition-all hover:bg-parchment-200 active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+          className="shrink-0 cursor-pointer rounded-xl border border-parchment-400 bg-parchment-100 px-4 py-2 font-display text-sm font-semibold text-ink-700 shadow-[0_2px_0_0_var(--color-parchment-400)] transition-all hover:bg-parchment-200 active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:pointer-events-none"
         >
           {addLabel}
         </button>

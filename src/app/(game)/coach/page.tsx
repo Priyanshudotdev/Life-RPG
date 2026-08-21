@@ -471,7 +471,7 @@ function PlanTab() {
           shift runs to evening&rdquo; or &ldquo;make it easier for this
           week&rdquo;.
         </p>
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <input
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
@@ -482,7 +482,7 @@ function PlanTab() {
             placeholder="e.g. Add something for my writing target…"
             className="min-w-0 flex-1 rounded-xl border border-parchment-400 bg-parchment-50 px-3 py-2.5 text-sm text-ink-800 placeholder:text-ink-300 focus:border-moss-500 focus:outline-none"
           />
-          <Button onClick={() => void runRefine()} disabled={!feedback.trim() || busy !== null}>
+          <Button onClick={() => void runRefine()} disabled={!feedback.trim() || busy !== null} className="shrink-0">
             <Send className="h-4 w-4" />
             {busy === "refine" ? "Revising…" : "Revise plan"}
           </Button>

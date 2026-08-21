@@ -46,8 +46,8 @@ function ApiKeyForm() {
 
   return (
     <div className="mt-3">
-      <div className="flex gap-2">
-        <div className="relative min-w-0 flex-1">
+      <div className="flex flex-wrap gap-2">
+        <div className="relative min-w-[200px] flex-1">
           <input
             type={visible ? "text" : "password"}
             value={key}
@@ -60,17 +60,18 @@ function ApiKeyForm() {
             type="button"
             aria-label={visible ? "Hide key" : "Show key"}
             onClick={() => setVisible((v) => !v)}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-600 cursor-pointer"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer text-ink-400 hover:text-ink-600"
           >
             {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        <Button onClick={save}>
+        <Button onClick={save} className="shrink-0">
           <Save className="h-4 w-4" /> Save
         </Button>
         {getGeminiKey() && (
           <Button
             variant="ghost"
+            className="shrink-0"
             onClick={() => {
               clearGeminiKey();
               setKey("");

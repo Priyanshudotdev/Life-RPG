@@ -71,7 +71,7 @@ export default function ProjectsPage() {
 
       {/* Add project */}
       <Panel>
-        <div className="flex items-end gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1">
             <FieldLabel>New quest</FieldLabel>
             <TextInput
@@ -82,7 +82,7 @@ export default function ProjectsPage() {
               onKeyDown={(e) => e.key === "Enter" && void handleAdd()}
             />
           </div>
-          <Button onClick={() => void handleAdd()} disabled={!newName.trim()}>
+          <Button onClick={() => void handleAdd()} disabled={!newName.trim()} className="shrink-0">
             <Plus className="h-4 w-4" /> Add to Inbox
           </Button>
         </div>

@@ -147,7 +147,7 @@ function TargetsPanel({ targets }: { targets: { id: string; text: string; create
         ))}
       </ol>
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -158,7 +158,7 @@ function TargetsPanel({ targets }: { targets: { id: string; text: string; create
           placeholder="Add a new target — e.g. Read 12 books this year…"
           className="min-w-0 flex-1 rounded-xl border border-parchment-400 bg-parchment-50 px-3 py-2.5 text-sm text-ink-800 placeholder:text-ink-300 focus:border-moss-500 focus:outline-none"
         />
-        <Button onClick={() => void submit()} disabled={!draft.trim() || adding}>
+        <Button onClick={() => void submit()} disabled={!draft.trim() || adding} className="shrink-0">
           <Plus className="h-4 w-4" /> Add target
         </Button>
       </div>
