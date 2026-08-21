@@ -158,6 +158,8 @@ export interface OnboardingDraft {
   secondTarget: string;
   selectedSkills: string[];
   skillLevels: Record<string, number>;
+  /** Optional starter habits picked during onboarding (skippable step). */
+  seedHabits: { name: string; icon: string }[];
   strengths: string[];
   weaknesses: string[];
   characterName: string;

@@ -253,21 +253,47 @@ export async function createPlayerFromOnboarding(draft: OnboardingDraft): Promis
     };
   });
 
-  await db.transaction("rw", db.players, db.skills, db.shopItems, db.activityLog, async () => {
-    await db.players.put(player);
-    await db.skills.bulkAdd(skills);
-    const existing = await db.shopItems.count();
-    if (existing === 0) {
-      await db.shopItems.bulkAdd(SHOP_CATALOG.map((item) => ({ ...item, id: crypto.randomUUID() })));
+  const seedHabits = (draft.seedHabits ?? [])
+    .map((h) => ({ ...h, name: h.name.trim().slice(0, 40) }))
+    .filter((h) => h.name)
+    .slice(0, 8);
+
+  await db.transaction(
+    "rw",
+    db.players,
+    db.skills,
+    db.habits,
+    db.shopItems,
+    db.activityLog,
+    async () => {
+      await db.players.put(player);
+      await db.skills.bulkAdd(skills);
+      if (seedHabits.length > 0) {
+        await db.habits.bulkAdd(
+          seedHabits.map((h) => ({
+            id: crypto.randomUUID(),
+            playerId: PLAYER_ID,
+            name: h.name,
+            icon: h.icon,
+            streakCount: 0,
+            lastCheckInDate: null,
+            weeklyLog: [],
+          }))
+        );
+      }
+      const existing = await db.shopItems.count();
+      if (existing === 0) {
+        await db.shopItems.bulkAdd(SHOP_CATALOG.map((item) => ({ ...item, id: crypto.randomUUID() })));
+      }
+      await log(
+        player.id,
+        `${player.name} entered the world. The adventure begins!`,
+        0,
+        0,
+        "system"
+      );
     }
-    await log(
-      player.id,
-      `${player.name} entered the world. The adventure begins!`,
-      0,
-      0,
-      "system"
-    );
-  });
+  );
 }
 
 /* ── Targets: append-only by design ───────────────────────── */

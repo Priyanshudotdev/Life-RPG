@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check, Compass, Flag, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Compass, Flag, Plus, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CharacterSheet } from "@/components/character-sheet";
@@ -9,12 +9,12 @@ import { Button } from "@/components/ui/button";
 import { ChipInput } from "@/components/ui/chip-input";
 import { FieldLabel, TextInput } from "@/components/ui/input";
 import { SegmentedBar } from "@/components/ui/segmented-bar";
-import { createPlayerFromOnboarding, PORTRAITS, SKILL_CATALOG } from "@/lib/game";
+import { createPlayerFromOnboarding, HABIT_ICONS, PORTRAITS, SKILL_CATALOG } from "@/lib/game";
 import { useGame } from "@/lib/store";
 import type { OnboardingDraft } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 
 const FIRST_TARGET_EXAMPLES = [
   "Travel the world",
@@ -30,11 +30,26 @@ const SECOND_TARGET_EXAMPLES = [
   "Save my first $1k",
 ];
 
+export const SEED_HABIT_SUGGESTIONS: { name: string; icon: string }[] = [
+  { name: "Morning stretch", icon: "sun" },
+  { name: "Read 20 pages", icon: "book-open" },
+  { name: "Move your body", icon: "dumbbell" },
+  { name: "Journal one line", icon: "pen-line" },
+  { name: "Code something small", icon: "code" },
+  { name: "Cook a real meal", icon: "salad" },
+  { name: "Lights out by 11", icon: "moon" },
+  { name: "Ten quiet minutes", icon: "heart" },
+];
+
+/** Upper bound for the seed-habits step so onboarding stays light. */
+export const SEED_HABITS_CAP = 6;
+
 const initialDraft: OnboardingDraft = {
   firstTarget: "",
   secondTarget: "",
   selectedSkills: [],
   skillLevels: Object.fromEntries(SKILL_CATALOG.map((s) => [s.name, 1])),
+  seedHabits: [],
   strengths: [],
   weaknesses: [],
   characterName: "",
@@ -62,7 +77,7 @@ export default function OnboardingPage() {
         return draft.secondTarget.trim().length > 0;
       case 4:
         return draft.selectedSkills.length > 0;
-      case 6:
+      case 7:
         return draft.characterName.trim().length > 0;
       default:
         return true;
@@ -127,51 +142,109 @@ export default function OnboardingPage() {
           <SkillSelectStep
             selected={draft.selectedSkills}
             levels={draft.skillLevels}
-            onToggle={(name) =>
+            onAdd={(name) => {
+              const n = name.trim().slice(0, 40);
+              if (!n) return;
+              if (draft.selectedSkills.some((s) => s.toLowerCase() === n.toLowerCase())) return;
               patch({
-                selectedSkills: draft.selectedSkills.includes(name)
-                  ? draft.selectedSkills.filter((s) => s !== name)
-                  : [...draft.selectedSkills, name],
-                skillLevels: { ...draft.skillLevels, [name]: draft.skillLevels[name] ?? 1 },
-              })
-            }
+                selectedSkills: [...draft.selectedSkills, n],
+                skillLevels: { ...draft.skillLevels, [n]: draft.skillLevels[n] ?? 1 },
+              });
+            }}
+            onRemove={(idx) => {
+              const name = draft.selectedSkills[idx];
+              const restLevels = { ...draft.skillLevels };
+              delete restLevels[name];
+              patch({
+                selectedSkills: draft.selectedSkills.filter((_, i) => i !== idx),
+                skillLevels: restLevels,
+              });
+            }}
             onLevel={(name, v) =>
               patch({ skillLevels: { ...draft.skillLevels, [name]: v } })
             }
           />
         )}
         {step === 5 && (
+          <SeedHabitsStep
+            picked={draft.seedHabits}
+            onToggle={(name, icon) =>
+              setDraft((d) => {
+                const key = name.toLowerCase();
+                const exists = d.seedHabits.some((h) => h.name.toLowerCase() === key);
+                if (exists) {
+                  return { ...d, seedHabits: d.seedHabits.filter((h) => h.name.toLowerCase() !== key) };
+                }
+                if (d.seedHabits.length >= SEED_HABITS_CAP) return d;
+                return { ...d, seedHabits: [...d.seedHabits, { name, icon }] };
+              })
+            }
+            onAddCustom={(name) =>
+              setDraft((d) => {
+                const key = name.toLowerCase();
+                if (d.seedHabits.some((h) => h.name.toLowerCase() === key)) return d;
+                if (d.seedHabits.length >= SEED_HABITS_CAP) return d;
+                return { ...d, seedHabits: [...d.seedHabits, { name, icon: HABIT_ICONS[0] }] };
+              })
+            }
+          />
+        )}
+        {step === 6 && (
           <FlawsStep
             strengths={draft.strengths}
             weaknesses={draft.weaknesses}
             onChange={(s, w) => patch({ strengths: s, weaknesses: w })}
           />
         )}
-        {step === 6 && (
+        {step === 7 && (
           <CharacterStep draft={draft} onChange={patch} />
         )}
-        {step === 7 && <ConfirmStep draft={draft} />}
+        {step === 8 && <ConfirmStep draft={draft} />}
       </div>
 
       {/* Wizard controls — stay reachable on small screens */}
-      <div className="sticky bottom-0 z-10 mt-6 flex items-center justify-between gap-3 bg-parchment-50/90 py-3 backdrop-blur md:static md:mt-10 md:bg-transparent md:py-0 md:backdrop-blur-none">
-        {step > 1 ? (
-          <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
-        ) : (
-          <span />
+      <div className="sticky bottom-0 z-10 mt-6 bg-parchment-50/90 py-3 backdrop-blur md:static md:mt-10 md:bg-transparent md:py-0 md:backdrop-blur-none">
+        {step > 1 && step < TOTAL_STEPS && (
+          <div className="mb-2 flex justify-center md:hidden">
+            <button
+              type="button"
+              onClick={() => setStep((s) => s + 1)}
+              className="cursor-pointer text-xs font-medium text-ink-400 underline decoration-dotted underline-offset-4 hover:text-moss-600"
+            >
+              Skip for now
+            </button>
+          </div>
         )}
-        {step < TOTAL_STEPS ? (
-          <Button size="lg" disabled={!canAdvance()} onClick={() => setStep((s) => s + 1)}>
-            {step === 1 ? "Begin" : "Continue"} <ArrowRight className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button size="lg" variant="gold" disabled={creating} onClick={confirm}>
-            <Sparkles className="h-4 w-4" />
-            {creating ? "Writing your legend…" : "Enter the World"}
-          </Button>
-        )}
+        <div className="flex items-center justify-between gap-3">
+          {step > 1 ? (
+            <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+          ) : (
+            <span />
+          )}
+          {step < TOTAL_STEPS ? (
+            <div className="flex flex-col items-end gap-1.5">
+              <Button size="lg" disabled={!canAdvance()} onClick={() => setStep((s) => s + 1)}>
+                {step === 1 ? "Begin" : "Continue"} <ArrowRight className="h-4 w-4" />
+              </Button>
+              {step > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => s + 1)}
+                  className="hidden cursor-pointer text-xs font-medium text-ink-400 underline decoration-dotted underline-offset-4 transition-colors hover:text-moss-600 md:block"
+                >
+                  Skip for now — you can add this later
+                </button>
+              )}
+            </div>
+          ) : (
+            <Button size="lg" variant="gold" disabled={creating} onClick={confirm}>
+              <Sparkles className="h-4 w-4" />
+              {creating ? "Writing your legend…" : "Enter the World"}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -255,20 +328,24 @@ function TargetStep({
   );
 }
 
-/* ── Step 4 — Pick & rate your skills ─────────────────────── */
+/* ── Step 4 — Add & rate your skills (free-form) ──────────── */
 function SkillSelectStep({
   selected,
   levels,
-  onToggle,
+  onAdd,
+  onRemove,
   onLevel,
 }: {
   selected: string[];
   levels: Record<string, number>;
-  onToggle: (name: string) => void;
+  onAdd: (name: string) => void;
+  onRemove: (index: number) => void;
   onLevel: (name: string, v: number) => void;
 }) {
   const toneCycle = ["moss", "gold", "plum", "terra", "focus", "xp"] as const;
-  const chosen = SKILL_CATALOG.filter((s) => selected.includes(s.name));
+  const suggestions = SKILL_CATALOG.filter(
+    (s) => !selected.some((n) => n.toLowerCase() === s.name.toLowerCase())
+  );
 
   return (
     <div className="panel p-8">
@@ -276,76 +353,68 @@ function SkillSelectStep({
         Which skills are you training?
       </h2>
       <p className="mt-2 text-sm text-ink-500">
-        Pick as many as you like — each becomes a trackable skill with its own
-        XP bar. You can add more later in Settings.
+        Type any skill you want to level up — dancing, cooking, coding,
+        anything. Add as many as you like; each gets its own XP bar.
       </p>
 
-      <p className="mt-5 font-display text-xs font-bold uppercase tracking-[0.12em] text-ink-400">
-        Select your skills ({selected.length} chosen)
-      </p>
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {SKILL_CATALOG.map((skill) => {
-          const active = selected.includes(skill.name);
-          return (
-            <button
-              key={skill.name}
-              type="button"
-              aria-pressed={active}
-              onClick={() => onToggle(skill.name)}
-              className={cn(
-                "cursor-pointer rounded-xl border px-3 py-2.5 text-left transition-all",
-                active
-                  ? "-translate-y-0.5 border-moss-600 bg-moss-50 shadow-lift"
-                  : "border-parchment-400 bg-parchment-100 hover:border-parchment-500"
-              )}
-            >
-              <span className="flex items-center justify-between gap-1">
-                <span className="font-display text-sm font-bold text-ink-800">
-                  {skill.name}
-                </span>
-                <span
-                  className={cn(
-                    "grid h-4 w-4 shrink-0 place-items-center rounded-full border",
-                    active
-                      ? "border-moss-600 bg-moss-500 text-parchment-50"
-                      : "border-parchment-400 bg-transparent"
-                  )}
-                >
-                  {active && <Check size={10} strokeWidth={3} />}
-                </span>
-              </span>
-              <span className="mt-0.5 block truncate text-xs text-ink-400">
-                {skill.blurb}
-              </span>
-            </button>
-          );
-        })}
+      <div className="mt-5">
+        <FieldLabel hint={`${selected.length} added`}>
+          Your skills
+        </FieldLabel>
+        <ChipInput
+          values={selected}
+          onAdd={onAdd}
+          onRemove={onRemove}
+          placeholder="Type a skill — e.g. Dancing, Chess, Video editing…"
+          addLabel="Add skill"
+        />
       </div>
 
-      {chosen.length > 0 && (
+      {suggestions.length > 0 && (
+        <>
+          <p className="mt-4 font-display text-xs font-bold uppercase tracking-[0.12em] text-ink-400">
+            Or tap a suggestion
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {suggestions.map((s) => (
+              <button
+                key={s.name}
+                type="button"
+                onClick={() => onAdd(s.name)}
+                title={s.blurb}
+                className="cursor-pointer rounded-full border border-parchment-400 bg-parchment-100 px-3 py-1 text-xs font-medium text-ink-500 transition-colors hover:border-moss-400 hover:bg-moss-50 hover:text-moss-600"
+              >
+                + {s.name}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {selected.length > 0 && (
         <>
           <div className="rule-dashed my-6" />
           <p className="font-display text-xs font-bold uppercase tracking-[0.12em] text-ink-400">
             Rate where you&apos;re starting from
           </p>
           <div className="mt-3 space-y-4">
-            {chosen.map((skill, i) => (
-              <div key={skill.name}>
+            {selected.map((name, i) => (
+              <div key={name}>
                 <div className="mb-1.5 flex items-baseline justify-between">
                   <span className="font-display text-sm font-bold text-ink-700">
-                    {skill.name}
+                    {name}
                   </span>
                   <span className="font-mono text-xs font-bold text-ink-500">
-                    Lv. {levels[skill.name] ?? 1}/5
+                    Lv. {levels[name] ?? 1}/5
                   </span>
                 </div>
                 <SegmentedBar
                   interactive
-                  label={`${skill.name} starting level`}
-                  value={levels[skill.name] ?? 1}
+                  label={`${name} starting level`}
+                  value={levels[name] ?? 1}
                   max={5}
                   tone={toneCycle[i % toneCycle.length]}
-                  onChange={(v) => onLevel(skill.name, v)}
+                  onChange={(v) => onLevel(name, v)}
                   segmentClassName="h-4"
                 />
               </div>
@@ -357,7 +426,123 @@ function SkillSelectStep({
   );
 }
 
-/* ── Step 5 — Strengths & weaknesses (multi-entry) ────────── */
+/* ── Step 5 — Seed a few habits (optional) ────────────────── */
+function SeedHabitsStep({
+  picked,
+  onToggle,
+  onAddCustom,
+}: {
+  picked: { name: string; icon: string }[];
+  onToggle: (name: string, icon: string) => void;
+  onAddCustom: (name: string) => void;
+}) {
+  const [custom, setCustom] = useState("");
+  const full = picked.length >= SEED_HABITS_CAP;
+
+  function addCustom() {
+    const name = custom.trim().slice(0, 40);
+    if (!name || full) return;
+    onAddCustom(name);
+    setCustom("");
+  }
+
+  return (
+    <div className="panel p-8">
+      <h2 className="font-display text-2xl font-bold text-ink-900">
+        Any habits you want to track?
+      </h2>
+      <p className="mt-2 text-sm text-ink-500">
+        Optional — pick a few small rituals to start with. You can always add
+        more (or set schedules) later.
+      </p>
+
+      <div className="mt-5 flex items-center justify-between gap-2">
+        <p className="font-display text-xs font-bold uppercase tracking-[0.12em] text-ink-400">
+          Suggestions
+        </p>
+        <p
+          className={cn(
+            "font-mono text-xs font-bold",
+            full ? "text-terra-600" : "text-ink-400"
+          )}
+          role="status"
+        >
+          {picked.length} picked · up to {SEED_HABITS_CAP}
+        </p>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {SEED_HABIT_SUGGESTIONS.map((s) => {
+          const active = picked.some((h) => h.name.toLowerCase() === s.name.toLowerCase());
+          return (
+            <button
+              key={s.name}
+              type="button"
+              aria-pressed={active}
+              disabled={!active && full}
+              onClick={() => onToggle(s.name, s.icon)}
+              className={cn(
+                "cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                active
+                  ? "border-moss-600 bg-moss-100 text-moss-700"
+                  : "border-parchment-400 bg-parchment-100 text-ink-500 hover:border-moss-400 hover:bg-moss-50 hover:text-moss-600",
+                !active && full && "cursor-not-allowed opacity-40"
+              )}
+            >
+              {active ? "✓ " : "+ "}
+              {s.name}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-4">
+        <FieldLabel hint="or add your own">Custom habit</FieldLabel>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <TextInput
+            value={custom}
+            maxLength={40}
+            placeholder="e.g. Practice guitar for 10 minutes"
+            disabled={full}
+            onChange={(e) => setCustom(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addCustom()}
+          />
+          <Button variant="secondary" onClick={addCustom} disabled={!custom.trim() || full} className="shrink-0">
+            <Plus className="h-4 w-4" /> Add
+          </Button>
+        </div>
+      </div>
+
+      {picked.length > 0 && (
+        <>
+          <div className="rule-dashed my-6" />
+          <p className="font-display text-xs font-bold uppercase tracking-[0.12em] text-ink-400">
+            Your starting rituals
+          </p>
+          <ul className="mt-3 space-y-1.5">
+            {picked.map((h) => (
+              <li
+                key={h.name}
+                className="flex items-center justify-between gap-2 rounded-xl border border-parchment-300 bg-parchment-100/60 px-3 py-2"
+              >
+                <span className="truncate text-sm font-medium text-ink-700">{h.name}</span>
+                <button
+                  type="button"
+                  aria-label={`Remove ${h.name}`}
+                  onClick={() => onToggle(h.name, h.icon)}
+                  className="cursor-pointer text-xs font-semibold text-ink-400 hover:text-terra-600"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ── Step 6 — Strengths & weaknesses (multi-entry) ────────── */
 function FlawsStep({
   strengths,
   weaknesses,
@@ -485,7 +670,6 @@ function CharacterStep({
 /* ── Step 7 — Confirm ─────────────────────────────────────── */
 function ConfirmStep({ draft }: { draft: OnboardingDraft }) {
   const previewPlayer = makePreviewPlayer(draft);
-  const chosen = SKILL_CATALOG.filter((s) => draft.selectedSkills.includes(s.name));
 
   return (
     <div className="space-y-5">
@@ -505,18 +689,21 @@ function ConfirmStep({ draft }: { draft: OnboardingDraft }) {
             Starting stats
           </h3>
           <ul className="mt-3 space-y-2.5">
-            {chosen.map((s) => (
-              <li key={s.name} className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium text-ink-700">{s.name}</span>
+            {(draft.selectedSkills.length > 0
+              ? draft.selectedSkills
+              : ["Creativity", "Health", "Learning"]
+            ).map((name) => (
+              <li key={name} className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium text-ink-700">{name}</span>
                 <SegmentedBar
-                  value={draft.skillLevels[s.name] ?? 1}
+                  value={draft.skillLevels[name] ?? 1}
                   max={5}
                   tone="moss"
                   className="w-28"
-                  label={`${s.name} level`}
+                  label={`${name} level`}
                 />
                 <span className="w-10 text-right font-mono text-xs text-ink-400">
-                  Lv. {draft.skillLevels[s.name] ?? 1}
+                  Lv. {draft.skillLevels[name] ?? 1}
                 </span>
               </li>
             ))}
