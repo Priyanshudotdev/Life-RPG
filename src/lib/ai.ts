@@ -31,7 +31,7 @@ export function clearGeminiKey(): void {
   window.localStorage.removeItem(KEY_STORAGE);
 }
 
-const GEMINI_MODEL = "gemini-2.5-flash";
+export const GEMINI_MODEL = "gemini-3.6-flash";
 
 /* ── Structured output contract ───────────────────────────── */
 interface CoachVerdict {

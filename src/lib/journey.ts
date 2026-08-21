@@ -1,4 +1,4 @@
-import { getGeminiKey } from "./ai";
+import { GEMINI_MODEL, getGeminiKey } from "./ai";
 import { db, PLAYER_ID } from "./db";
 import { addHabit, addProject, grantSkillXpAndCoins } from "./game";
 import type { Journey, JourneyMilestone } from "./types";
@@ -9,8 +9,6 @@ export interface MilestoneDraft {
   title: string;
   description: string;
 }
-
-const GEMINI_MODEL = "gemini-2.5-flash";
 
 const ROADMAP_SCHEMA = {
   type: "object",
