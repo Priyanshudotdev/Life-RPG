@@ -1,16 +1,16 @@
 import { cn } from "@/lib/utils";
 import type { ButtonHTMLAttributes } from "react";
 
-type Variant = "primary" | "secondary" | "gold" | "danger" | "ghost";
+type Variant = "primary" | "secondary" | "accent" | "danger" | "ghost";
 type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-moss-500 text-parchment-50 border-moss-700 shadow-[0_2px_0_0_var(--color-moss-700)] hover:bg-moss-600 active:translate-y-[2px] active:shadow-none",
+    "bg-moss-500 text-parchment-50 border-moss-700 shadow-[0_2px_0_0_var(--moss-700)] hover:bg-moss-600 active:translate-y-[2px] active:shadow-none",
   secondary:
     "bg-parchment-100 text-ink-700 border-parchment-400 shadow-[0_2px_0_0_var(--color-parchment-400)] hover:bg-parchment-200 active:translate-y-[2px] active:shadow-none",
-  gold:
-    "bg-gold-500 text-ink-900 border-gold-700 shadow-[0_2px_0_0_var(--color-gold-700)] hover:bg-gold-400 active:translate-y-[2px] active:shadow-none",
+  accent:
+    "bg-moss-100 text-moss-700 border-moss-400 shadow-[0_2px_0_0_var(--moss-400)] hover:bg-moss-300 hover:text-ink-900 active:translate-y-[2px] active:shadow-none",
   danger:
     "bg-terra-500 text-parchment-50 border-terra-700 shadow-[0_2px_0_0_var(--color-terra-700)] hover:bg-terra-600 active:translate-y-[2px] active:shadow-none",
   ghost:

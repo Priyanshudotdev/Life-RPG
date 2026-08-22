@@ -2,13 +2,16 @@ import { cn } from "@/lib/utils";
 
 type Tone = "hp" | "focus" | "xp" | "moss" | "plum" | "gold" | "terra";
 
+/* xp + gold ride the primary hue (lighter step) so every progress bar
+   follows the active theme. hp/focus stay fixed: they are game stats,
+   not decoration. */
 const tones: Record<Tone, { filled: string; empty: string }> = {
   hp: { filled: "bg-terra-500 border-terra-700", empty: "bg-terra-100 border-terra-300" },
   focus: { filled: "bg-plum-500 border-plum-700", empty: "bg-plum-100 border-plum-300" },
-  xp: { filled: "bg-gold-400 border-gold-600", empty: "bg-gold-100 border-gold-300" },
+  xp: { filled: "bg-moss-400 border-moss-600", empty: "bg-moss-50 border-moss-300" },
   moss: { filled: "bg-moss-500 border-moss-700", empty: "bg-moss-100 border-moss-300" },
   plum: { filled: "bg-plum-500 border-plum-700", empty: "bg-plum-100 border-plum-300" },
-  gold: { filled: "bg-gold-400 border-gold-600", empty: "bg-gold-100 border-gold-300" },
+  gold: { filled: "bg-moss-400 border-moss-600", empty: "bg-moss-50 border-moss-300" },
   terra: { filled: "bg-terra-500 border-terra-700", empty: "bg-terra-100 border-terra-300" },
 };
 

@@ -25,11 +25,12 @@ interface PortraitDef {
 }
 
 const PORTRAIT_DEFS: Record<PortraitId, PortraitDef> = {
-  ranger: { bg: "#e7ead2", cloak: "#6e7f4f", accent: "#c9973b", hair: "#5d4632", skinIdx: 0, hairStyle: "short" },
+  /* Ranger + monk wear the primary hue, so they follow the active theme. */
+  ranger: { bg: "var(--moss-100)", cloak: "var(--moss-500)", accent: "#c9973b", hair: "#5d4632", skinIdx: 0, hairStyle: "short" },
   scholar: { bg: "#ecdfed", cloak: "#6c4a70", accent: "#dfc27a", hair: "#3d3428", skinIdx: 1, hairStyle: "bun" },
   smith: { bg: "#f6e0d4", cloak: "#c05f3c", accent: "#4a4330", hair: "#2f2a20", skinIdx: 2, hairStyle: "hat" },
   bard: { bg: "#f5e8c6", cloak: "#c9973b", accent: "#6c4a70", hair: "#8a5a2e", skinIdx: 3, hairStyle: "curly" },
-  monk: { bg: "#e7ead2", cloak: "#8ba05e", accent: "#faf6ea", hair: "#4a4330", skinIdx: 4, hairStyle: "hood" },
+  monk: { bg: "var(--moss-100)", cloak: "var(--moss-400)", accent: "var(--color-parchment-50)", hair: "#4a4330", skinIdx: 4, hairStyle: "hood" },
   alchemist: { bg: "#ecdfed", cloak: "#966f99", accent: "#c05f3c", hair: "#c8c0ae", skinIdx: 5, hairStyle: "long" },
 };
 

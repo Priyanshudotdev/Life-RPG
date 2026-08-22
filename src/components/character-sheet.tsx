@@ -26,7 +26,7 @@ export function CharacterSheet({
             <h1 className="truncate font-display text-xl font-bold text-ink-900">
               {player.name}
             </h1>
-            <span className="shrink-0 rounded-full border border-gold-500 bg-gold-100 px-2.5 py-0.5 font-mono text-xs font-bold text-gold-700">
+            <span className="shrink-0 rounded-full border border-moss-500 bg-moss-100 px-2.5 py-0.5 font-mono text-xs font-bold text-moss-700">
               Lv. {player.level}
             </span>
           </div>

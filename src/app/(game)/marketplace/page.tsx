@@ -89,7 +89,7 @@ export default function MarketplacePage() {
                       <Coins className="h-3.5 w-3.5" /> {item.costCoins}
                     </p>
                     <Button
-                      variant={affordable ? "gold" : "secondary"}
+                      variant={affordable ? "accent" : "secondary"}
                       className="w-full"
                       onClick={() => void handleClaim(item)}
                     >

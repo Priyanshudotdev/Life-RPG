@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Playfair_Display } from "next/font/google";
 import {
   ArrowRight,
@@ -124,15 +125,15 @@ function Hills({ className = "" }: { className?: string }) {
     >
       <path
         d="M0 220 C240 140 420 250 720 200 C1020 150 1200 230 1440 170 L1440 320 L0 320 Z"
-        fill="#aebd85"
+        fill="var(--moss-300)"
       />
       <path
         d="M0 260 C300 190 520 290 800 245 C1080 200 1260 275 1440 235 L1440 320 L0 320 Z"
-        fill="#8ba05e"
+        fill="var(--moss-400)"
       />
       <path
         d="M0 300 C360 245 640 320 960 285 C1200 258 1330 300 1440 280 L1440 320 L0 320 Z"
-        fill="#6e7f4f"
+        fill="var(--moss-500)"
       />
       {/* flowers */}
       <g>
@@ -163,14 +164,14 @@ function SiteNav() {
   return (
     <header className="absolute inset-x-0 top-0 z-20">
       <nav className="mx-auto flex h-18 max-w-6xl items-center justify-between px-5 py-4 md:px-8">
-        <a href="/" className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl border border-moss-700 bg-moss-500 text-parchment-50 shadow-[0_2px_0_0_var(--color-moss-700)]">
+        <Link href="/" className="flex items-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-xl border border-moss-700 bg-moss-500 text-parchment-50 shadow-[0_2px_0_0_var(--moss-700)]">
             <Compass className="h-5 w-5" />
           </span>
           <span className="font-serif-display text-xl font-bold tracking-tight text-ink-900">
             Cozy Tactics
           </span>
-        </a>
+        </Link>
         <div className="hidden items-center gap-7 font-display text-sm font-semibold text-ink-500 lg:flex">
           <a href="#features" className="transition-colors hover:text-ink-900">Features</a>
           <a href="#tour" className="transition-colors hover:text-ink-900">Tour</a>

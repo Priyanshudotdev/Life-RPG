@@ -71,8 +71,8 @@ export default function CoachPage() {
       ) : !hasKey ? (
         <Panel>
           <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-gold-500 bg-gold-100">
-              <KeyRound className="h-5 w-5 text-gold-600" />
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-moss-500 bg-moss-100">
+              <KeyRound className="h-5 w-5 text-moss-600" />
             </span>
             <div>
               <PanelTitle>A Gemini API key is needed</PanelTitle>
@@ -169,7 +169,7 @@ function DebriefTab({ reviews }: { reviews: AiReview[] }) {
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="font-mono text-xs font-bold text-ink-400">{r.date}</span>
-                  <span className="font-mono text-sm font-bold text-gold-700">
+                  <span className="font-mono text-sm font-bold text-moss-700">
                     {r.score}/100
                   </span>
                 </div>
@@ -202,9 +202,9 @@ function VerdictCard({ result }: { result: Awaited<ReturnType<typeof reviewDay>>
     <Panel className="border-moss-300">
       <div className="flex items-center justify-between gap-3">
         <PanelTitle className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-gold-500" /> The Coach&apos;s verdict
+          <Sparkles className="h-4 w-4 text-moss-600" /> The Coach&apos;s verdict
         </PanelTitle>
-        <span className="font-mono text-2xl font-bold text-gold-700">
+        <span className="font-mono text-2xl font-bold text-moss-700">
           {review.score}
           <span className="text-sm text-ink-400">/100</span>
         </span>
@@ -385,7 +385,7 @@ function PlanTab() {
       <Panel className={plan.appliedAt ? "" : "border-moss-300"}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <PanelTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-gold-500" /> The Coach&apos;s plan
+            <Sparkles className="h-4 w-4 text-moss-600" /> The Coach&apos;s plan
           </PanelTitle>
           <div className="flex items-center gap-2">
             {plan.appliedAt ? (

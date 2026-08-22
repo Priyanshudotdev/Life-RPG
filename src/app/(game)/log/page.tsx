@@ -68,7 +68,7 @@ export default function LogPage() {
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-0.5">
                     {e.xpGained > 0 && (
-                      <span className="flex items-center gap-1 font-mono text-xs font-bold text-gold-600">
+                      <span className="flex items-center gap-1 font-mono text-xs font-bold text-moss-600">
                         <Sparkles className="h-3 w-3" /> +{e.xpGained} XP
                       </span>
                     )}

@@ -64,7 +64,7 @@ export default function DashboardPage() {
           <Panel>
             <div className="flex items-center justify-between">
               <PanelTitle>Goal Completion</PanelTitle>
-              <span className="font-mono text-sm font-bold text-gold-600">{goalPct}%</span>
+              <span className="font-mono text-sm font-bold text-moss-600">{goalPct}%</span>
             </div>
             <ProgressBar pct={goalPct} tone="gold" className="mt-3 h-3" />
             <p className="mt-2 text-xs text-ink-400">
@@ -95,7 +95,7 @@ export default function DashboardPage() {
           href="/projects"
         />
         <StatCard
-          icon={<Target className="h-4 w-4 text-gold-600" />}
+          icon={<Target className="h-4 w-4 text-moss-600" />}
           label="Stages cleared"
           value={String(doneProjects.length)}
           href="/projects"

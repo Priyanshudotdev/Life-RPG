@@ -38,7 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Desktop nav rail */}
       <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col border-r border-parchment-400 bg-parchment-100/80 px-4 py-6 backdrop-blur md:flex">
         <Link href="/dashboard" className="mb-8 flex items-center gap-2 px-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl border border-moss-700 bg-moss-500 text-parchment-50 shadow-[0_2px_0_0_var(--color-moss-700)]">
+          <span className="grid h-9 w-9 place-items-center rounded-xl border border-moss-700 bg-moss-500 text-parchment-50 shadow-[0_2px_0_0_var(--moss-700)]">
             <Compass className="h-5 w-5" />
           </span>
           <span className="font-display text-lg font-bold tracking-tight text-ink-900">
@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 rounded-xl border px-3 py-2.5 font-display text-sm font-semibold transition-all",
                   active
-                    ? "border-moss-700 bg-moss-500 text-parchment-50 shadow-[0_2px_0_0_var(--color-moss-700)]"
+                    ? "border-moss-700 bg-moss-500 text-parchment-50 shadow-[0_2px_0_0_var(--moss-700)]"
                     : "border-transparent text-ink-500 hover:bg-parchment-200"
                 )}
               >
@@ -95,10 +95,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </span>
             </span>
             <span
-              className="inline-flex items-center gap-1.5 rounded-full border border-gold-500 bg-gold-500 px-3 py-1"
+              className="inline-flex items-center gap-1.5 rounded-full border border-moss-500 bg-moss-500 px-3 py-1"
               title="Character level"
             >
-              <span className="font-mono text-xs font-bold text-ink-900">
+              <span className="font-mono text-xs font-bold text-parchment-50">
                 Lv. {player?.level ?? 1}
               </span>
             </span>

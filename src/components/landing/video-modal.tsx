@@ -94,7 +94,7 @@ function VideoModal({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-3 px-8 py-20 text-center">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl border border-moss-700 bg-moss-500 text-parchment-50 shadow-[0_2px_0_0_var(--color-moss-700)]">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl border border-moss-700 bg-moss-500 text-parchment-50 shadow-[0_2px_0_0_var(--moss-700)]">
               <Compass className="h-7 w-7" />
             </span>
             <p className="font-serif-display text-2xl font-semibold text-ink-900">

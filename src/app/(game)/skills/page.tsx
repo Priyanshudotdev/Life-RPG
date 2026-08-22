@@ -121,7 +121,7 @@ function SkillHistory({ skill, onClose }: { skill: Skill; onClose: () => void })
                 {formatTimestamp(e.timestamp)}
               </span>
               {e.xpGained > 0 && (
-                <span className="shrink-0 font-mono text-xs font-bold text-gold-600">
+                <span className="shrink-0 font-mono text-xs font-bold text-moss-600">
                   +{e.xpGained} XP
                 </span>
               )}

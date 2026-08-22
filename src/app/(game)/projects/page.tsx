@@ -233,7 +233,7 @@ export default function ProjectsPage() {
                   <Button size="sm" variant="secondary" onClick={() => void moveProject(project.id, "inbox")}>
                     Back to Inbox
                   </Button>
-                  <Button size="sm" variant="gold" onClick={() => void handleStageClear(project)}>
+                  <Button size="sm" variant="accent" onClick={() => void handleStageClear(project)}>
                     Stage Clear
                   </Button>
                 </>

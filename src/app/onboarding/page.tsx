@@ -259,7 +259,7 @@ export default function OnboardingPage() {
               )}
             </div>
           ) : (
-            <Button size="lg" variant="gold" disabled={creating} onClick={confirm}>
+            <Button size="lg" variant="accent" disabled={creating} onClick={confirm}>
               <Sparkles className="h-4 w-4" />
               {creating ? "Writing your legend…" : "Enter the World"}
             </Button>

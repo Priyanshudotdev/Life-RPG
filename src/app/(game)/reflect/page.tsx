@@ -118,7 +118,7 @@ export default function ReflectPage() {
 
         <Panel>
           <div className="flex items-center gap-2">
-            <CalendarCheck className="h-4 w-4 text-gold-600" />
+            <CalendarCheck className="h-4 w-4 text-moss-600" />
             <p className="font-display text-[11px] font-bold uppercase tracking-[0.12em] text-ink-400">
               Habits completed
             </p>
@@ -164,7 +164,7 @@ export default function ReflectPage() {
                 <XAxis
                   dataKey="label"
                   tickLine={false}
-                  axisLine={{ stroke: "#c9bc9a" }}
+                  axisLine={{ stroke: "var(--color-parchment-400)" }}
                   tick={{ fill: "#6d6450", fontSize: 11, fontFamily: "var(--font-quicksand)", fontWeight: 700 }}
                   interval={period === "month" ? 2 : 0}
                 />
@@ -175,11 +175,11 @@ export default function ReflectPage() {
                   tick={{ fill: "#6d6450", fontSize: 11 }}
                 />
                 <Tooltip
-                  cursor={{ fill: "rgba(139,160,94,0.12)" }}
+                  cursor={{ fill: "rgba(74,67,48,0.07)" }}
                   formatter={(v) => [`${v} check-in${v === 1 ? "" : "s"}`, null]}
                   contentStyle={{
-                    background: "#faf6ea",
-                    border: "1px solid #c9bc9a",
+                    background: "var(--color-parchment-50)",
+                    border: "1px solid var(--color-parchment-400)",
                     borderRadius: 12,
                     fontSize: 12,
                     color: "#35301f",
@@ -187,7 +187,7 @@ export default function ReflectPage() {
                 />
                 <Bar
                   dataKey="completions"
-                  fill="#8ba05e"
+                  fill="var(--moss-400)"
                   radius={[6, 6, 0, 0]}
                   maxBarSize={period === "month" ? 18 : 40}
                   isAnimationActive={false}

@@ -36,7 +36,7 @@ export function Tabs<T extends string>({
           className={cn(
             "shrink-0 cursor-pointer whitespace-nowrap rounded-lg px-3.5 py-1.5 font-display text-sm font-semibold transition-all",
             value === item.value
-              ? "bg-moss-500 text-parchment-50 shadow-[0_2px_0_0_var(--color-moss-700)]"
+              ? "bg-moss-500 text-parchment-50 shadow-[0_2px_0_0_var(--moss-700)]"
               : "text-ink-500 hover:bg-parchment-200"
           )}
         >
