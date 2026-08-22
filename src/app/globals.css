@@ -2,25 +2,17 @@
 
 @theme {
   /* ── Life RPG palette ─────────────────────────────────── */
-  --color-parchment-50: #faf6ea;
-  --color-parchment-100: #f4eeda;
-  --color-parchment-200: #ece3c9;
-  --color-parchment-300: #ddd0ac;
-  --color-parchment-400: #c9bc9a;
-  --color-parchment-500: #b0a37f;
+  --color-parchment-50: #fdfdfc;
+  --color-parchment-100: #f8f7f4;
+  --color-parchment-200: #f3f2ee;
+  --color-parchment-300: #e8e6df;
+  --color-parchment-400: #d7d3c9;
+  --color-parchment-500: #bdb7a9;
 
   --color-ink-900: #35301f;
   --color-ink-700: #4a4330;
   --color-ink-500: #6d6450;
   --color-ink-400: #877d66;
-
-  --color-moss-300: #aebd85;
-  --color-moss-400: #8ba05e;
-  --color-moss-500: #6e7f4f;
-  --color-moss-600: #57663c;
-  --color-moss-700: #43502e;
-  --color-moss-100: #e7ead2;
-  --color-moss-50: #f1f3e3;
 
   --color-terra-100: #f6e0d4;
   --color-terra-300: #e09173;
@@ -52,16 +44,82 @@
   /* ── Shadows ──────────────────────────────────────────── */
   --shadow-panel: 0 1px 2px rgb(74 67 48 / 0.08), 0 4px 14px rgb(74 67 48 / 0.1);
   --shadow-lift: 0 2px 4px rgb(74 67 48 / 0.1), 0 10px 24px rgb(74 67 48 / 0.16);
-  --shadow-inset-line: inset 0 0 0 1px rgb(201 188 154 / 0.55);
+  --shadow-inset-line: inset 0 0 0 1px rgb(215 211 201 / 0.55);
 
   --radius-card: 1rem;
+}
+
+/* ── Swappable primary hue ─────────────────────────────── */
+/* The "moss" family is themeable at runtime. :root holds the
+   default meadow green; a data-theme attribute on <html>
+   swaps every step for another hue. */
+:root {
+  --moss-50: #f1f3e3;
+  --moss-100: #e7ead2;
+  --moss-300: #aebd85;
+  --moss-400: #8ba05e;
+  --moss-500: #6e7f4f;
+  --moss-600: #57663c;
+  --moss-700: #43502e;
+}
+
+[data-theme="blue"] {
+  --moss-50: #e9f1f5;
+  --moss-100: #d2e3ec;
+  --moss-300: #86adc5;
+  --moss-400: #5589a8;
+  --moss-500: #396d8b;
+  --moss-600: #2b556d;
+  --moss-700: #204153;
+}
+
+[data-theme="purple"] {
+  --moss-50: #f0edf5;
+  --moss-100: #e0daeb;
+  --moss-300: #a794c4;
+  --moss-400: #816aab;
+  --moss-500: #63518f;
+  --moss-600: #4d3f70;
+  --moss-700: #3a3055;
+}
+
+[data-theme="pink"] {
+  --moss-50: #f8edf0;
+  --moss-100: #efd9df;
+  --moss-300: #cd92a9;
+  --moss-400: #b26784;
+  --moss-500: #954969;
+  --moss-600: #773852;
+  --moss-700: #5a2a3e;
+}
+
+[data-theme="orange"] {
+  --moss-50: #f8efe3;
+  --moss-100: #f1ddc4;
+  --moss-300: #dfa66f;
+  --moss-400: #cc8542;
+  --moss-500: #ae6926;
+  --moss-600: #8b521d;
+  --moss-700: #683e15;
+}
+
+/* Map the runtime vars into Tailwind's utility namespace so
+   bg-moss-500, text-moss-600, etc. all follow the active theme. */
+@theme inline {
+  --color-moss-50: var(--moss-50);
+  --color-moss-100: var(--moss-100);
+  --color-moss-300: var(--moss-300);
+  --color-moss-400: var(--moss-400);
+  --color-moss-500: var(--moss-500);
+  --color-moss-600: var(--moss-600);
+  --color-moss-700: var(--moss-700);
 }
 
 body {
   background-color: var(--color-parchment-200);
   background-image:
-    radial-gradient(rgb(176 163 127 / 0.12) 1px, transparent 1px),
-    radial-gradient(rgb(176 163 127 / 0.09) 1px, transparent 1px);
+    radial-gradient(rgb(189 183 169 / 0.12) 1px, transparent 1px),
+    radial-gradient(rgb(189 183 169 / 0.09) 1px, transparent 1px);
   background-size: 22px 22px, 22px 22px;
   background-position: 0 0, 11px 11px;
   color: var(--color-ink-700);
@@ -85,7 +143,7 @@ body {
 }
 
 ::selection {
-  background: var(--color-gold-200);
+  background: var(--moss-100);
   color: var(--color-ink-900);
 }
 
@@ -114,7 +172,7 @@ body {
 
 /* Focus-visible ring in theme colors */
 *:focus-visible {
-  outline: 2px solid var(--color-moss-500);
+  outline: 2px solid var(--moss-500);
   outline-offset: 2px;
   border-radius: 4px;
 }

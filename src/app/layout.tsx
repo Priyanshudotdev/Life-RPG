@@ -26,13 +26,18 @@ export const metadata: Metadata = {
     "A cozy local-first life RPG: turn goals into quests, habits into streaks, and skills into levels.",
 };
 
+/** Runs before first paint so a saved theme never flashes green. */
+const themeBoot = `try{var t=localStorage.getItem("life-rpg-theme");if(t&&t!=="green"&&["blue","purple","pink","orange"].indexOf(t)>-1)document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${quicksand.variable} ${beVietnam.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
         <GameProvider>{children}</GameProvider>
         <Analytics />
       </body>

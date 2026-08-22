@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Eye, EyeOff, KeyRound, Lock, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChipInput } from "@/components/ui/chip-input";
 import { FieldLabel, TextInput } from "@/components/ui/input";
@@ -18,7 +18,9 @@ import {
   updatePlayerProfile,
 } from "@/lib/game";
 import { useGame } from "@/lib/store";
+import { THEMES, getStoredTheme, setTheme, type ThemeId } from "@/lib/theme";
 import type { Player } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { player, skills } = useGame();
@@ -85,6 +87,52 @@ function ApiKeyForm() {
           Saved ✓
         </p>
       )}
+    </div>
+  );
+}
+
+function ThemePicker() {
+  const [active, setActive] = useState<ThemeId>("green");
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setActive(getStoredTheme()));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+      {THEMES.map((t) => {
+        const selected = active === t.id;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => {
+              setTheme(t.id);
+              setActive(t.id);
+            }}
+            className={cn(
+              "rounded-xl border p-3 text-left transition-colors",
+              selected
+                ? "border-moss-500 bg-moss-50 shadow-sm"
+                : "border-parchment-300 bg-parchment-100/60 hover:border-parchment-400",
+            )}
+          >
+            <span className="flex -space-x-1">
+              {t.swatch.map((c) => (
+                <span
+                  key={c}
+                  className="h-4 w-4 rounded-full border border-ink-900/10 ring-2 ring-parchment-50"
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </span>
+            <span className="mt-2 block font-display text-sm font-bold text-ink-800">{t.label}</span>
+            <span className="block text-[11px] leading-snug text-ink-400">{t.hint}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -224,7 +272,7 @@ function SettingsForm({ player, ownedSkills }: { player: Player; ownedSkills: st
 
       <Panel>
         <PanelTitle className="flex items-center gap-2">
-          <KeyRound className="h-4 w-4 text-gold-600" /> AI Coach
+          <KeyRound className="h-4 w-4 text-moss-600" /> AI Coach
         </PanelTitle>
         <p className="mt-3 text-sm text-ink-500">
           Paste your Gemini API key to enable the AI Coach. It&apos;s stored
@@ -246,8 +294,9 @@ function SettingsForm({ player, ownedSkills }: { player: Player; ownedSkills: st
       <Panel>
         <PanelTitle>Display</PanelTitle>
         <p className="mt-3 text-sm text-ink-500">
-          Cozy parchment mode is the only mode — and honestly, it&apos;s the best one.
+          Pick the hue of your adventure — buttons, bars and charts all follow.
         </p>
+        <ThemePicker />
       </Panel>
 
       <Panel className="border-terra-300">
