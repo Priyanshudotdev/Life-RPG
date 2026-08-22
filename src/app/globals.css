@@ -90,8 +90,7 @@ body {
 }
 
 /* Parchment panel — the core surface of the design system */
-.panel {
-  background-color: var(--color-parchment-50);
+.panel {  background-color: var(--color-parchment-50);
   background-image: linear-gradient(
     160deg,
     rgb(255 255 255 / 0.65),
@@ -105,6 +104,12 @@ body {
 /* Hand-drawn style dashed divider */
 .rule-dashed {
   border-top: 2px dashed var(--color-parchment-400);
+}
+
+/* Landing-page display serif — resolves the next/font variable scoped to the
+   landing wrapper (the variable is NOT on :root, so no @theme indirection). */
+.font-serif-display {
+  font-family: var(--font-playfair), "Playfair Display", Georgia, serif;
 }
 
 /* Focus-visible ring in theme colors */
